@@ -19,7 +19,6 @@ export class FeedsPage implements OnInit, OnDestroy{
   // User content...
   avatarUrl?: string = '';
   username: string = '';
-  isliked: boolean = false;
   currentUserId: string | null = null; // Declare property here
 
   //Music...
@@ -61,7 +60,6 @@ export class FeedsPage implements OnInit, OnDestroy{
       next: (data: any) =>{
         // Spreads new posts at the beginning of the array
         this.postList = [...data];
-
         // Hide spinner if triggered by pull-to-refresh
         if (event) {
           event.target.complete();
@@ -155,19 +153,6 @@ export class FeedsPage implements OnInit, OnDestroy{
   handleRefresh(event: any){
     this.loadUserProfile(event);
     this.loadPost(event);
-  }
-
-  getUserAvatar(): string{
-
-     if (this.avatarUrl) {
-      // Return absolute URLs directly
-      if (this.avatarUrl.startsWith('http://') || this.avatarUrl.startsWith('https://')) {
-        return this.avatarUrl;
-      }
-    }
-
-    // Default fallback placeholder
-    return 'assets/images/default-avatar.png';
   }
 
   toggleLikes(item: any){  

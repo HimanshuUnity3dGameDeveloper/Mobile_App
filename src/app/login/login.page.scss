@@ -1,16 +1,3 @@
-ion-button{
-    width: 90%;
-    background: linear-gradient(90deg, #7c3aed 0%, #c084fc 100%);
-    border-radius: 10px;
-    --box-shadow: 0 6px 16px rgba(124, 58, 237, 0.35);
-    color: white;
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 0.5px;
-    height: 40px;
-    cursor: pointer;
-    text-transform: none;
-}
 
 .toggle-eye-icon {
   position: absolute;
@@ -113,6 +100,20 @@ ion-button{
     .auth-card{
         width: 100%;
     }
+
+    ion-button{
+        width: 90%;
+        background: linear-gradient(90deg, #7c3aed 0%, #c084fc 100%);
+        border-radius: 10px;
+        --box-shadow: 0 6px 16px rgba(124, 58, 237, 0.35);
+        color: white;
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: 0.5px;
+        height: 40px;
+        cursor: pointer;
+        text-transform: none;
+    }
 }
 
 .other-Login{
@@ -162,5 +163,41 @@ ion-button{
     p{
         color: #ad7df75d;
         font-weight: bold;
+    }
+}
+
+.modal-container{
+    .image-hold{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 15px 0;
+
+        ion-text{
+            font-size: 22px;
+        }
+
+        .ion-hold{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+
+            .panel{            
+                display: grid;
+                align-items: center;
+                justify-content: center;
+                width: 320px;
+                height: 320px;
+                background: gray;
+                border-radius: 50%;   
+                
+                ion-icon{
+                    font-size: 80px;
+                }
+            }
+        }
     }
 }

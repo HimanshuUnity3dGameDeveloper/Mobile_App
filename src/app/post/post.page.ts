@@ -4,6 +4,13 @@ import { Router } from '@angular/router';
 import { NavController } from '@ionic/angular';
 import { PreviousRouteServe } from '../previous-route-serve';
 import { AudioTrack, ContentAuthor, CreatePostPayload } from '../authcontroller/authInterface';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { Camera } from '@capacitor/camera';
+
+export interface GalleryItem{
+  webPath: string;
+  safeUrl: SafeUrl;
+}
 
 @Component({
   selector: 'app-post',
@@ -91,6 +98,7 @@ export class PostPage implements OnInit {
     {id:'15', url:'assets/images/Post2.jpg', mediaType: 'image', aspectRatio: 1/1}
   ]
 
+  images: GalleryItem[] = [];
   @Input() captionText: string = '';
   @Input() maxLength: number = 2200;
   @Output() captionChange = new EventEmitter<string>();
@@ -99,7 +107,8 @@ export class PostPage implements OnInit {
     private router:Router,
     private navCtrl: NavController,
     private readonly authServe: AuthService,
-    private readonly previousRoute: PreviousRouteServe
+    private readonly previousRoute: PreviousRouteServe,
+    private sanitizer: DomSanitizer
   ) { }
 
   ngOnInit() {
@@ -117,6 +126,16 @@ export class PostPage implements OnInit {
         console.error('Failed to load user profile:', err);
       },
     });
+
+    this.autoFetchGallery();
+  }
+
+  // Use Ionic lifecycle hook if using Ionic Router navigation
+  ionViewDidEnter() {
+    // Optional: runs every time the view becomes active
+    if (this.images.length === 0) {
+      this.autoFetchGallery();
+    }
   }
 
   onChangePost(id: string){
@@ -254,5 +273,27 @@ export class PostPage implements OnInit {
 
   onChangeContentType(tab: any){
     this.activeTab = tab;
+  }
+
+  async autoFetchGallery(){
+    try{
+      const imageList = await Camera.pickImages({
+        quality: 90,
+        limit: 0
+      });
+
+      if(imageList.photos && imageList.photos.length > 0){
+        const selectImag: GalleryItem[] = imageList.photos.map((photo)=>{
+          return{
+            webPath: photo.webPath,
+            safeUrl: this.sanitizer.bypassSecurityTrustUrl(photo.webPath)
+          };
+        });
+
+        this.images = [...this.images, ...selectImag];
+      }
+    }catch(error){
+      console.error('Error selecting images from gallery:', error);
+    }
   }
 }

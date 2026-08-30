@@ -62,18 +62,4 @@ export class HomePage implements OnInit {
     this.activeTab = tabName;
     this.navCtrl.navigateRoot(['home', tabName], { animated: false });
   }
-
-  // 1. GET AVATAR...
-  getUserAvatar(): string{
-
-    if (this.avatarUrl) {
-      // Return absolute URLs directly
-      if (this.avatarUrl.startsWith('http://') || this.avatarUrl.startsWith('https://')) {
-        return this.avatarUrl;
-      }
-    }
-
-    // Default fallback placeholder
-    return 'assets/images/default-avatar.png';
-  }
 }
