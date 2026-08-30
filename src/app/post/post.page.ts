@@ -130,14 +130,6 @@ export class PostPage implements OnInit {
     this.autoFetchGallery();
   }
 
-  // Use Ionic lifecycle hook if using Ionic Router navigation
-  ionViewDidEnter() {
-    // Optional: runs every time the view becomes active
-    if (this.images.length === 0) {
-      this.autoFetchGallery();
-    }
-  }
-
   onChangePost(id: string){
     this.selectPost = id;
     

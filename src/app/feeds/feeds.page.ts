@@ -157,7 +157,7 @@ export class FeedsPage implements OnInit, OnDestroy{
 
   toggleLikes(item: any){  
     const userId = item._id;
-    if (!userId || !this.currentUserId) return;
+    if (!userId || !this.currentUserId) {return};
 
     // 1. Optimistically update local UI state immediately
     item.isLiked = !item.isLiked;
