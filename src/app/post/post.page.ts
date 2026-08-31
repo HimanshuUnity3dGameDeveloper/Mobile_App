@@ -4,13 +4,6 @@ import { Router } from '@angular/router';
 import { NavController } from '@ionic/angular';
 import { PreviousRouteServe } from '../previous-route-serve';
 import { AudioTrack, ContentAuthor, CreatePostPayload } from '../authcontroller/authInterface';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
-import { Camera } from '@capacitor/camera';
-
-export interface GalleryItem{
-  webPath: string;
-  safeUrl: SafeUrl;
-}
 
 @Component({
   selector: 'app-post',
@@ -98,7 +91,6 @@ export class PostPage implements OnInit {
     {id:'15', url:'assets/images/Post2.jpg', mediaType: 'image', aspectRatio: 1/1}
   ]
 
-  images: GalleryItem[] = [];
   @Input() captionText: string = '';
   @Input() maxLength: number = 2200;
   @Output() captionChange = new EventEmitter<string>();
@@ -108,7 +100,6 @@ export class PostPage implements OnInit {
     private navCtrl: NavController,
     private readonly authServe: AuthService,
     private readonly previousRoute: PreviousRouteServe,
-    private sanitizer: DomSanitizer
   ) { }
 
   ngOnInit() {
@@ -126,8 +117,6 @@ export class PostPage implements OnInit {
         console.error('Failed to load user profile:', err);
       },
     });
-
-    this.autoFetchGallery();
   }
 
   onChangePost(id: string){
@@ -202,6 +191,7 @@ export class PostPage implements OnInit {
     // 1. get the fullname and change to lower..
     const cleanName = (this.username || '').toLowerCase().trim(); // strip spaces and special chars
     
+        console.log(cleanName)
     // 2. Split into parts
     const parts = cleanName.split(/\s+/); // Splits by one or more spaces
 
@@ -210,6 +200,7 @@ export class PostPage implements OnInit {
     const uniqueSuffix = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
     const generatedUsername = `@${lastName}_${uniqueSuffix}`;
     
+        console.log(`generatedUsername + ${parts} + ${lastName}`)
     // Helper to extract #hashtags into an array
     const extractedHashtags = this.caption? (this.caption.match(/#[\w]+/g)?.map(tag => tag.substring(1)) || []) : [];
 
@@ -267,25 +258,4 @@ export class PostPage implements OnInit {
     this.activeTab = tab;
   }
 
-  async autoFetchGallery(){
-    try{
-      const imageList = await Camera.pickImages({
-        quality: 90,
-        limit: 0
-      });
-
-      if(imageList.photos && imageList.photos.length > 0){
-        const selectImag: GalleryItem[] = imageList.photos.map((photo)=>{
-          return{
-            webPath: photo.webPath,
-            safeUrl: this.sanitizer.bypassSecurityTrustUrl(photo.webPath)
-          };
-        });
-
-        this.images = [...this.images, ...selectImag];
-      }
-    }catch(error){
-      console.error('Error selecting images from gallery:', error);
-    }
-  }
 }

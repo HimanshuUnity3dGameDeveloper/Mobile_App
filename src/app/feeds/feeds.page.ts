@@ -19,6 +19,7 @@ export class FeedsPage implements OnInit, OnDestroy{
   // User content...
   avatarUrl?: string = '';
   username: string = '';
+  isLikedBy: boolean =false;
   currentUserId: string | null = null; // Declare property here
 
   //Music...
@@ -163,13 +164,12 @@ export class FeedsPage implements OnInit, OnDestroy{
     item.isLiked = !item.isLiked;
     item.likesCount += item.isLiked ? 1 : -1;
   
-
     this.authServe.updateLikes(userId, this.currentUserId).subscribe({
       next: (updatedPost: any) => {
         console.log('Successfully updated in DB:', updatedPost);
-        item.likesCount = updatedPost.likesCount;
         item.likedBy = updatedPost.likedBy;
         item.isLiked = updatedPost.isLiked;
+        item.likesCount = updatedPost.likesCount;
       },
       error: (err) => {
         console.error('DB Update failed:', err);
