@@ -1,7 +1,7 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, catchError, map, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, finalize, map, Observable, tap, throwError } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { CreatePostPayload, LoginResponse, MediaComposerState, OverlayText, PostResponse, PostType, User } from './authInterface';
 
@@ -10,7 +10,7 @@ import { CreatePostPayload, LoginResponse, MediaComposerState, OverlayText, Post
 })
 
 export class AuthService {
-
+private currentUserSubject = new BehaviorSubject<User | null>(null);
   constructor(
     private http: HttpClient,
     private router: Router
@@ -58,25 +58,29 @@ export class AuthService {
   
   // 1. LOGIN DATA...
   login(identity: string, password: string): Observable<LoginResponse>{
-    return this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`,{identity, password}).pipe(
-      tap((user)=>
-      {
-        if (user && user.accessToken) {
-          alert(`${user.message} ${user.user.username}`)
-          // Save token and user info locally
-          localStorage.setItem('userID', JSON.stringify(user.user._id));
-          localStorage.setItem('accessToken', user.accessToken);
-        }
-      })
+    return this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, {identity, password}).pipe
+      (tap((user)=> 
+        {
+          if (user && user.jwt) {
+            alert(`${user.message} ${user.user.username}`)
+            console.log(user.user._id);
+            // Save token and user info locally
+            localStorage.setItem('userID', JSON.stringify(user.user._id));
+            localStorage.setItem('accessToken', user.jwt);
+          }
+        })
     );
   }
 
   // 2. USER DATA...
-  loadUserData() {
+  loadUserData(): Observable<User> {
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${this.getToken()}`
+    });
+
     const rawId = localStorage.getItem('userID');
     const userId = rawId ? JSON.parse(rawId) : null;
-
-    return this.http.get<User>(`${environment.apiUrl}/auth/${userId}`).pipe(
+    return this.http.get<User>(`${environment.apiUrl}/auth/${userId}`, { headers }).pipe(
       map((user) => {
         if (user) {
           const avatar = user.avatarUrl?.trim();
@@ -175,6 +179,18 @@ export class AuthService {
     );
   }
 
+  // 4. LogOut
+  logout(): void {
+    this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true }).pipe(
+      finalize(() => {
+        // Runs ALWAYS whether the backend request succeeds or fails
+        localStorage.removeItem('accessToken');
+        sessionStorage.clear();
+        this.currentUserSubject.next(null);
+        this.router.navigate(['/login'], { replaceUrl: true });
+      })
+    ).subscribe(); // Trigger the Observable execution
+  }
   //#endregion
 
   //#region MEDIA DATA.....
@@ -226,20 +242,14 @@ export class AuthService {
     this.state$.next(this.initialState);
   }
   //#endregion
-  
-
-  logout() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('userID');
-    this.router.navigate(['/login']);
-  }
 
   getToken(): string | null {
-    return localStorage.getItem('accessToken');
+    const token =  localStorage.getItem('accessToken');
+    return token;
   }
 
-  updateLikes(postId: string, userId:string): Observable<any>{
+  // updateLikes(postId: string, userId:string): Observable<any>{
 
-    return this.http.patch(`${environment.apiUrl}/post/${postId}/like`, {userId});
-  }
+  //   return this.http.patch(`${environment.apiUrl}/post/${postId}/like`, {userId});
+  // }
 }

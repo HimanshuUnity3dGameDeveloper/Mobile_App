@@ -140,6 +140,11 @@ export class ProfilePage implements OnInit {
     this.router.navigate(['./post']);
   }
   onLogout(){
+    // Remove focus from any active button to prevent accessibility focus warnings
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
     this.authServe.logout();
   }
 }

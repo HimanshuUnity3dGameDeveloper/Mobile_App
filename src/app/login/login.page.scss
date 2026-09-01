@@ -95,6 +95,18 @@
                 letter-spacing: 0.5px;
             }
         }
+
+        .fb-login{
+            width: 45%;
+            background: #2a76e7;
+            color: white;
+        }
+
+        .guset-login{
+            width: 45%;
+            background: gray;
+            color: white;
+        }
     }
 
     .auth-card{
@@ -128,18 +140,6 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
-}
-
-.fb-login{
-    width: 45%;
-    background: #2a76e7;
-    color: white;
-}
-
-.guset-login{
-    width: 45%;
-    background: gray;
-    color: white;
 }
 
 .descript{

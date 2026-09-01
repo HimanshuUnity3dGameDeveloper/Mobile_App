@@ -20,7 +20,7 @@ export interface User{
 // Login Data...
 export interface LoginResponse {
   message: string;
-  accessToken: string;
+  jwt: string;
   user: any;
 }
 
