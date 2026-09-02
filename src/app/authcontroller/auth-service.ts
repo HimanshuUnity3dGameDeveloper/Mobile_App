@@ -63,9 +63,6 @@ private currentUserSubject = new BehaviorSubject<User | null>(null);
         {
           if (user && user.jwt) {
             alert(`${user.message} ${user.user.username}`)
-            console.log(user.user._id);
-            // Save token and user info locally
-            localStorage.setItem('userID', JSON.stringify(user.user._id));
             localStorage.setItem('accessToken', user.jwt);
           }
         })
@@ -74,13 +71,7 @@ private currentUserSubject = new BehaviorSubject<User | null>(null);
 
   // 2. USER DATA...
   loadUserData(): Observable<User> {
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${this.getToken()}`
-    });
-
-    const rawId = localStorage.getItem('userID');
-    const userId = rawId ? JSON.parse(rawId) : null;
-    return this.http.get<User>(`${environment.apiUrl}/auth/${userId}`, { headers }).pipe(
+    return this.http.get<User>(`${environment.apiUrl}/auth/user`).pipe(
       map((user) => {
         if (user) {
           const avatar = user.avatarUrl?.trim();
@@ -143,16 +134,10 @@ private currentUserSubject = new BehaviorSubject<User | null>(null);
 
   // 3. LOAD SINGLE POST...
   loadPostData(){
-    
-    const rawId = localStorage.getItem('userID');
-    const userId = rawId ? JSON.parse(rawId) : null;
-
-    return this.http.get<PostResponse>(`${environment.apiUrl}/post/${encodeURIComponent(userId)}`).pipe(
+    return this.http.get<PostResponse>(`${environment.apiUrl}/post/user`).pipe(
       map((user) => {
         if (user) {
           if (!user) return [];
-
-          
           // Clean base origin URL regardless of trailing paths like /auth or /post
           const baseUrl = environment.apiUrl.replace(/\/(auth|post)\/?$/, '') || 'http://localhost:3000';
           
