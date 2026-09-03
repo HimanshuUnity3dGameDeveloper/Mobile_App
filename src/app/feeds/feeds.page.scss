@@ -54,16 +54,14 @@
                 position: relative;
                 width: 100%;
                 max-width: 443px;  /* Target width */
-                height: 450px;     /* Target height */
-                margin: 0 auto;    /* Centers the image card if screen is wider than 443px */
-                border-radius: 8px; /* Optional rounded corners */
+                aspect-ratio: 443 / 450;
+                height: auto;
 
                 .post-image{
                     width: 100%;
                     height: 100%;
-                    object-fit: cover; /* Crops image cleanly to fill 443x450 without distorting */
+                    object-fit: cover; 
                     object-position: center;
-                    display: block;
                 }
                 
                 .btn-absolue{

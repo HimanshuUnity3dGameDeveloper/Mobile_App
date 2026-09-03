@@ -22,6 +22,8 @@ export class FeedsPage implements OnInit, OnDestroy{
   // Modal visibility and selected post state
   isLikesModalOpen = false;
   selectedFeedForLikes: any = null;
+
+  isCommitModalOpen = false;
   // User content...
   avatarUrl?: string = '';
   username: string = '';
@@ -196,6 +198,9 @@ export class FeedsPage implements OnInit, OnDestroy{
     })
   }
 
+  openCommitModel(feed: any){
+    this.isCommitModalOpen = true;
+  }
   dismissModal() {
     this.isLikesModalOpen = false;
   }

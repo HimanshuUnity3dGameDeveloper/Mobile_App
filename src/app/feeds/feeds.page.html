@@ -89,7 +89,7 @@
               </div>
              
               <div class="likebtn">
-                <ion-icon slot="icon-only" name="chatbox-outline"></ion-icon>
+                <ion-icon slot="icon-only" name="chatbox-outline" (click)="openCommitModel(feed)"></ion-icon>
                 <div class="likeTitle"><span>{{feed?.commentsCount}}</span></div>
               </div>
 
@@ -107,7 +107,7 @@
           <div class="subtitle-panel">
             <p (click)="openLikesModal(feed)">{{feed?.likesCount}} likes</p>
             <p><span>{{feed?.author?.authorName}}</span> {{feed?.caption}}</p>
-            <a class="view-btn">View all {{feed?.commentsCount}} comments</a>
+            <a class="view-btn" (click)="openCommitModel(feed)">View all {{feed?.commentsCount}} comments</a>
             <p class="para">{{(feed?.time || feed?.createdAt) | timeAgo}}</p>
           </div>
         </div>
@@ -139,6 +139,38 @@
             <span>{{selectedFeedForLikes?.likesCount}}</span>
           </div>
         </div>
+        <div class="person-list" *ngFor="let user of likedByUsers">
+          <div class="avatar">
+            <ion-avatar>           
+              <ion-img [src]="user.avatarUrl" alt="User Avatar"></ion-img>
+            </ion-avatar>
+            <div class="title">
+              <h2>{{user?.username}}</h2>
+              <span>{{user?.fullname}}</span>
+            </div>
+          </div>
+          <div class="tabs">
+            <ion-button slot="end" shape="round" size="small" fill="clear">Follow</ion-button>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal 
+    [isOpen]="isCommitModalOpen" 
+    (didDismiss)="isLikesModalOpen = false"
+    [initialBreakpoint]="0.5" 
+    [breakpoints]="[0, 0.5, 1]"
+    [handle]="true"
+    class="bottom-modal">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Comments</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
         <div class="person-list" *ngFor="let user of likedByUsers">
           <div class="avatar">
             <ion-avatar>           
