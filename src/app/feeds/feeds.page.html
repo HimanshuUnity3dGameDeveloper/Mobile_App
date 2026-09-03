@@ -70,7 +70,7 @@
         </div>
 
         <div class="post-content">
-            <ion-img [src]="feed.mediaUrl"></ion-img>
+            <ion-img [src]="feed.mediaUrl" class="post-image"></ion-img>
             <div size="small" fill="clear" slot="end" (click)="previewTrack(feed?.audio, $event)" class="btn-absolue">
               <ion-icon [name]="isPlayingPreview && isAudioId === feed?.audio?.id ? 'volume-high' : 'volume-mute'"></ion-icon>
             </div>
@@ -136,7 +136,6 @@
           </div>
           <div class="card">
             <ion-icon slot="icon-only" name="eye-outline"></ion-icon>
-            <span>2</span>
             <span>{{selectedFeedForLikes?.likesCount}}</span>
           </div>
         </div>

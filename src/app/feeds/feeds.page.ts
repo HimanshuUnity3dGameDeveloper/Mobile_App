@@ -160,24 +160,15 @@ export class FeedsPage implements OnInit, OnDestroy{
 
   toggleLikes(item: any){  
     const userId = item._id;
-    if (!userId || !this.currentUserId) {return};
-
-    // 1. Optimistically update local UI state immediately
-    item.isLiked = !item.isLiked;
-    item.likesCount += item.isLiked ? 1 : -1;
+    if (!userId) {return};
   
-    this.authServe.updateLikes(userId, this.currentUserId).subscribe({
+    this.authServe.updateLikes(userId).subscribe({
       next: (updatedPost: any) => {
-        console.log('Successfully updated in DB:', updatedPost);
         item.likedBy = updatedPost.likedBy;
-        item.isLiked = updatedPost.isLiked;
         item.likesCount = updatedPost.likesCount;
       },
       error: (err: any) => {
         console.error('DB Update failed:', err);
-        // Revert optimistic update if API call fails
-        item.isLiked = !item.isLiked;
-        item.likesCount += item.isLiked ? 1 : -1;
       }
     });
   }

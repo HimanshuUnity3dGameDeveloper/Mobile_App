@@ -257,8 +257,23 @@ private currentUserSubject = new BehaviorSubject<User | null>(null);
     return token;
   }
 
-  updateLikes(postId: string, userId:string): Observable<any>{
+  updateLikes(postId: string): Observable<any>{
 
-    return this.http.patch(`${environment.apiUrl}/post/${postId}/like`, {userId});
+    return this.http.patch(`${environment.apiUrl}/post/${postId}/like`, {}).pipe(
+      catchError((error: HttpErrorResponse) => {
+        console.error('Server side error during like update:', error);
+        return throwError(() => new Error(error.error?.message || 'Server error occurred'));
+      })
+    );
+  }
+
+  getLikes(postId: string): Observable<any>{
+
+    return this.http.get(`${environment.apiUrl}/post/${postId}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        console.error('Server side error during like retrieval:', error);
+        return throwError(() => new Error(error.error?.message || 'Server error occurred'));
+      })
+    );
   }
 }
