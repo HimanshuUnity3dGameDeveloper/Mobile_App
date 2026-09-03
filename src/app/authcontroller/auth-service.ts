@@ -176,6 +176,30 @@ private currentUserSubject = new BehaviorSubject<User | null>(null);
       })
     ).subscribe(); // Trigger the Observable execution
   }
+
+  // 5. Load user by id...
+  loadUserDataById(userId: string) {
+    return this.http.get<User>(`${environment.apiUrl}/auth/${userId}`).pipe(
+      map((user) => {
+        if (user) {
+          const baseUrl = environment.apiUrl.replace(/\/(auth|post)\/?$/, '') || 'http://localhost:3000';
+          
+          const formatUrl = (path?: string): string => {
+            const trimmed = path?.trim();
+            if (!trimmed) return 'assets/images/default-avatar.png';
+            if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+            return `${baseUrl}${trimmed.startsWith('/') ? '' : '/'}${trimmed}`;
+          };
+
+          return {
+            ...user,
+            avatarUrl: formatUrl(user.avatarUrl)
+          };
+        }
+        return user;
+      })
+    );
+  }
   //#endregion
 
   //#region MEDIA DATA.....
@@ -233,8 +257,8 @@ private currentUserSubject = new BehaviorSubject<User | null>(null);
     return token;
   }
 
-  // updateLikes(postId: string, userId:string): Observable<any>{
+  updateLikes(postId: string, userId:string): Observable<any>{
 
-  //   return this.http.patch(`${environment.apiUrl}/post/${postId}/like`, {userId});
-  // }
+    return this.http.patch(`${environment.apiUrl}/post/${postId}/like`, {userId});
+  }
 }
