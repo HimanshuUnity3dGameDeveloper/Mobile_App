@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
-import { AuthService } from '../authcontroller/auth-service';
 import { AudioTrack, CreatePostPayload } from '../authcontroller/authInterface';
 import { IonModal } from '@ionic/angular';
 import { forkJoin } from 'rxjs';
+import { PostService } from '../authcontroller/Post-service';
+import { ProfileService } from '../authcontroller/profile-service';
 
 interface HighLight{
   imgUrl: string;
@@ -47,7 +48,8 @@ export class FeedsPage implements OnInit, OnDestroy{
   ]
 
   constructor(
-    private readonly authServe: AuthService
+    private readonly postServe: PostService,
+    private readonly profileServe: ProfileService
   ) { }
 
   ngOnInit() { 
@@ -61,7 +63,7 @@ export class FeedsPage implements OnInit, OnDestroy{
 
   loadPost(event?: any){
 
-    this.authServe.loadAllPost().subscribe({
+    this.postServe.loadAllPost().subscribe({
       next: (data: any) =>{
         // Spreads new posts at the beginning of the array
         this.postList = [...data];
@@ -83,7 +85,7 @@ export class FeedsPage implements OnInit, OnDestroy{
 
   loadUserProfile(event?: any){
     
-    this.authServe.loadUserData().subscribe({
+    this.profileServe.loadUserData().subscribe({
       next: (userData: any) => {
         this.username = userData.username;
         this.avatarUrl = userData.avatarUrl?.trim(); 
@@ -164,7 +166,7 @@ export class FeedsPage implements OnInit, OnDestroy{
     const userId = item._id;
     if (!userId) {return};
   
-    this.authServe.updateLikes(userId).subscribe({
+    this.postServe.updateLikes(userId).subscribe({
       next: (updatedPost: any) => {
         item.likedBy = updatedPost.likedBy;
         item.likesCount = updatedPost.likesCount;
@@ -187,7 +189,7 @@ export class FeedsPage implements OnInit, OnDestroy{
     }
     
     const currentUser = userIds.map((id) =>{
-      return this.authServe.loadUserDataById(id);
+      return this.profileServe.loadUserDataById(id);
     })
 
     forkJoin(currentUser).subscribe({
