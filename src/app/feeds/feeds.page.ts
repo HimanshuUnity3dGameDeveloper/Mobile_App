@@ -194,7 +194,6 @@ export class FeedsPage implements OnInit, OnDestroy{
 
     forkJoin(currentUser).subscribe({
       next: (userData: any[]) => {
-        console.log('Current user data:', userData);
         this.likedByUsers = userData;
       }
     })
