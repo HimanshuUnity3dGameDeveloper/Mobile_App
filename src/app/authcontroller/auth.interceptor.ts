@@ -55,10 +55,10 @@ export class AuthInterceptor implements HttpInterceptor {
 
     const alert = await this.alertController.create({
       header: 'Session Expired',
-      message: 'Aapka session expire ho gaya hai. Kripya dobara login karein.',
+      message: 'Please login again!',
       buttons: [
         {
-          text: 'Login Again',
+          text: 'Login',
           handler: () => {
             this.authService.logout();
           }
