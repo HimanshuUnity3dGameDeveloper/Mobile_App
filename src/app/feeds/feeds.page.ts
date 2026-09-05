@@ -202,6 +202,7 @@ export class FeedsPage implements OnInit, OnDestroy{
   openCommitModel(feed: any){
     this.isCommitModalOpen = true;
   }
+  
   dismissModal() {
     this.isLikesModalOpen = false;
   }
