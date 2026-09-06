@@ -74,6 +74,16 @@ export class PostService {
   }
   //#endregion
 
+  // 2. DELETE POST..
+  deletePostfromUser(postId: string):Observable<PostResponse>{
+    return this.http.delete<PostResponse>(`${environment.apiUrl}/post/${postId}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        console.error('Server side error during registration:', error);
+        return throwError(() => new Error(error.error?.message || 'Server error occurred'));
+      })
+    );
+  }
+
   // 2. ALL FEEDS....
   loadAllPost(){
     return this.http.get<PostResponse>(`${environment.apiUrl}/post`).pipe(

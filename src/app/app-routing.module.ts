@@ -18,7 +18,11 @@ const routes: Routes = [
     loadChildren: () => import('./home/home.module').then( m => m.HomePageModule),
     canActivate: [authGuard]
   },
-  { path: '**', redirectTo: 'login' },
+  { path: '**', redirectTo: 'login' },  {
+    path: 'like-modal',
+    loadChildren: () => import('./like-modal/like-modal.module').then( m => m.LikeModalPageModule)
+  },
+
 ];
 
 @NgModule({

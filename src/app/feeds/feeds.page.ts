@@ -53,6 +53,9 @@ export class FeedsPage implements OnInit, OnDestroy{
   ) { }
 
   ngOnInit() { 
+  }
+
+  ionViewWillEnter() {
     this.loadUserProfile();
     this.loadPost();
   }
