@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
-import { AudioTrack, CreatePostPayload } from 'src/app/core/authcontroller/authInterface';
+import { AudioTrack, CreatePostPayload, ReelItem } from 'src/app/core/authcontroller/authInterface';
 import { IonModal } from '@ionic/angular';
 import { forkJoin } from 'rxjs';
 import { PostService } from 'src/app/home/features/post/Post-service';
 import { ProfileService } from 'src/app/core/authcontroller/profile-service';
+import { ReelService } from '../reels/reel-service';
 
 interface HighLight{
   imgUrl: string;
@@ -49,6 +50,7 @@ export class FeedsPage implements OnInit, OnDestroy{
 
   constructor(
     private readonly postServe: PostService,
+    private readonly reelServe: ReelService,
     private readonly profileServe: ProfileService
   ) { }
 
@@ -66,23 +68,29 @@ export class FeedsPage implements OnInit, OnDestroy{
 
   loadPost(event?: any){
 
-    this.postServe.loadAllPost().subscribe({
-      next: (data: any) =>{
-        // Spreads new posts at the beginning of the array
-        this.postList = [...data];
-        // Hide spinner if triggered by pull-to-refresh
-        if (event) {
-          event.target.complete();
-        }        
-      },
-      error: (err) => {
-        console.error('Failed to load user profile:', err);
-      
-        // Hide spinner if triggered by pull-to-refresh
-        if (event) {
-          event.target.complete();
+    forkJoin({
+      posts: this.postServe.loadAllPost(),
+      reels: this.reelServe.loadReels()}).subscribe({
+        next: ({ posts, reels }) =>{
+          // Concatenate both arrays
+          const combined = [...(Array.isArray(posts) ? posts : [posts]), ...(Array.isArray(reels) ? reels : [reels])];
+          // Spreads new posts at the beginning of the array
+          this.postList = combined.sort((a, b) => 
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          // Hide spinner if triggered by pull-to-refresh
+          if (event) {
+            event.target.complete();
+          }        
+        },
+        error: (err) => {
+          console.error('Failed to load user profile:', err);
+        
+          // Hide spinner if triggered by pull-to-refresh
+          if (event) {
+            event.target.complete();
+          }
         }
-      }
     })
   }
 

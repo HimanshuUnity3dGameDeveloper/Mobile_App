@@ -45,7 +45,7 @@ export interface ContentAuthor{
 }
 
 export interface CreatePostPayload {
-    _id?:                string;
+    _id?:             string;
     author:           ContentAuthor | null;
     username:         string;
     type:             'POST' | 'REEL' | 'STORY';
@@ -54,7 +54,7 @@ export interface CreatePostPayload {
     mediaType:        'image' | 'video'; // Use strict union types instead of plain string
     hashtags?:        string[];          // Changed to array of strings
     isLiked?:         boolean;
-    likesCount:      number;          // Optional for creation payload
+    likesCount:       number;          // Optional for creation payload
     commentsCount?:   number;       // Optional for creation payload
     sharesCount?:     number;
     audio?:           AudioTrack | null; // <-- Add this field
@@ -67,6 +67,24 @@ export interface PostResponse extends CreatePostPayload {
   commentsCount: number;        // Guaranteed number from DB
   createdDate: string;
   updatedAt: string;
+}
+
+export interface ReelItem{
+
+  _id?:             string;
+  author:           ContentAuthor | null;
+  username:         string;
+  type:             'POST' | 'REEL' | 'STORY';
+  caption?:         string;
+  mediaUrl:         string;
+  mediaType:        'image' | 'video'; // Use strict union types instead of plain string
+  hashtags?:        string[];          // Changed to array of strings
+  isLiked?:         boolean;
+  likesCount:       number;          // Optional for creation payload
+  commentsCount?:   number;       // Optional for creation payload
+  sharesCount?:     number;
+  audio?:           AudioTrack | null; // <-- Add this field
+  isPlaying?:       boolean;
 }
 
 //#endregion
