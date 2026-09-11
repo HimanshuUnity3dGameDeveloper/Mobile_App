@@ -1,9 +1,9 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
-import { AudioTrack, CreatePostPayload } from '../authcontroller/authInterface';
+import { AudioTrack, CreatePostPayload } from 'src/app/core/authcontroller/authInterface';
 import { IonModal } from '@ionic/angular';
 import { forkJoin } from 'rxjs';
-import { PostService } from '../authcontroller/Post-service';
-import { ProfileService } from '../authcontroller/profile-service';
+import { PostService } from 'src/app/core/authcontroller/Post-service';
+import { ProfileService } from 'src/app/core/authcontroller/profile-service';
 
 interface HighLight{
   imgUrl: string;

@@ -1,11 +1,9 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { AuthService } from '../authcontroller/auth-service';
-import { Router } from '@angular/router';
 import { NavController, ToastController } from '@ionic/angular';
-import { PreviousRouteServe } from '../previous-route-serve';
-import { AudioTrack, ContentAuthor, CreatePostPayload } from '../authcontroller/authInterface';
-import { ProfileService } from '../authcontroller/profile-service';
-import { PostService } from '../authcontroller/Post-service';
+import { AudioTrack, ContentAuthor, CreatePostPayload } from 'src/app/core/authcontroller/authInterface';
+import { ProfileService } from 'src/app/core/authcontroller/profile-service';
+import { PostService } from 'src/app//core/authcontroller/Post-service';
+import { PreviousRouteServe } from 'src/app/core/previous-route-serve';
 
 @Component({
   selector: 'app-post',

@@ -1,6 +1,6 @@
 import { Component, OnInit, NgZone } from '@angular/core';
 import { Location } from '@angular/common';
-import { AuthService } from '../authcontroller/auth-service';
+import { AuthService } from '../core/authcontroller/auth-service';
 import { ActionSheetController, NavController, ToastController } from '@ionic/angular';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 

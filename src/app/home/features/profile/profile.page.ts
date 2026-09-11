@@ -1,9 +1,9 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Router } from '@angular/router';
-import { AuthService } from '../authcontroller/auth-service';
-import { ProfileService } from '../authcontroller/profile-service';
-import { PostService } from '../authcontroller/Post-service';
+import { AuthService } from 'src/app/core/authcontroller/auth-service';
+import { ProfileService } from 'src/app/core/authcontroller/profile-service';
+import { PostService } from 'src/app/core/authcontroller/Post-service';
 import { ToastController } from '@ionic/angular';
 
 export interface UserProfile{

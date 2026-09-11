@@ -4,17 +4,19 @@ import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
 
-import { LikeModalPageRoutingModule } from './like-modal-routing.module';
+import { FeedsPageRoutingModule } from './feeds-routing.module';
 
-import { LikeModalPage } from './like-modal.page';
+import { FeedsPage } from './feeds.page';
+import { TimeAgoPipe } from 'src/app/core/time-ago-pipe';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    LikeModalPageRoutingModule
+    FeedsPageRoutingModule,
+    TimeAgoPipe
   ],
-  declarations: [LikeModalPage]
+  declarations: [FeedsPage]
 })
-export class LikeModalPageModule {}
+export class FeedsPageModule {}
