@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { AudioTrack, CreatePostPayload } from 'src/app/core/authcontroller/authInterface';
 import { IonModal } from '@ionic/angular';
 import { forkJoin } from 'rxjs';
-import { PostService } from 'src/app/core/authcontroller/Post-service';
+import { PostService } from 'src/app/home/features/post/Post-service';
 import { ProfileService } from 'src/app/core/authcontroller/profile-service';
 
 interface HighLight{

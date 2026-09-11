@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, catchError, map, Observable, throwError } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { CreatePostPayload, MediaComposerState, OverlayText, PostResponse, PostType } from './authInterface';
+import { CreatePostPayload, MediaComposerState, OverlayText, PostResponse, PostType } from '../../../core/authcontroller/authInterface';
 
 @Injectable({
   providedIn: 'root',
