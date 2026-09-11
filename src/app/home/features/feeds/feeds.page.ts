@@ -74,6 +74,7 @@ export class FeedsPage implements OnInit, OnDestroy{
         next: ({ posts, reels }) =>{
           // Concatenate both arrays
           const combined = [...(Array.isArray(posts) ? posts : [posts]), ...(Array.isArray(reels) ? reels : [reels])];
+          
           // Spreads new posts at the beginning of the array
           this.postList = combined.sort((a, b) => 
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
