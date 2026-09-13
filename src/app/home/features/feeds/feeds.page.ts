@@ -66,7 +66,7 @@ export class FeedsPage implements OnInit, OnDestroy{
     this.stopAudio();
   }
 
-  loadPost(event?: any){
+  private loadPost(event?: any){
 
     forkJoin({
       posts: this.postServe.loadAllPost(),
@@ -94,8 +94,8 @@ export class FeedsPage implements OnInit, OnDestroy{
         }
     })
   }
-
-  loadUserProfile(event?: any){
+  
+  private loadUserProfile(event?: any){
     
     this.profileServe.loadUserData().subscribe({
       next: (userData: any) => {
@@ -188,7 +188,7 @@ export class FeedsPage implements OnInit, OnDestroy{
       }
     });
   }
-
+  
   openLikesModal(feed: any) {
     this.selectedFeedForLikes = feed;
     this.isLikesModalOpen = true;
@@ -210,7 +210,7 @@ export class FeedsPage implements OnInit, OnDestroy{
       }
     })
   }
-
+  
   openCommitModel(feed: any){
     this.isCommitModalOpen = true;
   }

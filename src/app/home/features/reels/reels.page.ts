@@ -1,5 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChildren, QueryList} from '@angular/core';
-import { ViewWillLeave } from '@ionic/angular';
+import { Component, OnInit, ElementRef, ViewChildren, QueryList, viewChildren} from '@angular/core';
 import { register } from 'swiper/element/bundle';
 import { ReelService } from './reel-service';
 import { ReelItem } from 'src/app/core/authcontroller/authInterface';
@@ -13,9 +12,10 @@ register();
   styleUrls: ['./reels.page.scss'],
   standalone:false
 })
-export class ReelsPage implements OnInit, ViewWillLeave {
+export class ReelsPage implements OnInit {
   
   @ViewChildren('videoPlayer') videoPlayers!: QueryList<ElementRef<HTMLVideoElement>>;
+  @ViewChildren('audioPlayer') audioPlayers!: QueryList<ElementRef<HTMLAudioElement>>;
   private currentAudio: HTMLAudioElement | null = null;
   private activeIndex: number = 0;
   isReelPlay: boolean = false;
@@ -67,42 +67,71 @@ export class ReelsPage implements OnInit, ViewWillLeave {
     })
   }
 
-  // Triggered when navigating away from Reels page
-  ionViewWillLeave(): void {
-    this.stopCurrentAudio();
-  }
-
   // Handle slide transition: play current, pause others
   onSlideChange(event: any) {
     const newIndex = event.detail[0]?.activeIndex ?? 0;
     this.onplaySwitchScreen(newIndex);
   }
 
+  onVideoEnded(indexNum: number) {
+    // Restart video playback
+    this.onplaySwitchScreen(indexNum);
+  }
+
   onplaySwitchScreen(indexNum: number){
     this.activeIndex = indexNum;
-
-    // 1. Pause and clean up current audio
-    this.stopCurrentAudio();
 
     this.videoPlayers.forEach((playerRef, index) => {
       const video = playerRef.nativeElement;
 
       if (index === indexNum) {
         video.currentTime = 0;
-        video.play();
+        video.play().catch(err => console.warn('Video play prevented:', err));
 
         // Update state for active index
         if (this.reels[index]) {
           this.reels[index].isPlaying = true;
         }
 
-        // Start new audio track for active slide
-        this.playAudioForReel(this.reels[indexNum]);
       } else {
         video.pause();      
-        this.reels[indexNum].isPlaying = false;
+        if (this.reels[index]) {
+          this.reels[index].isPlaying = false; // Fixed: indexNum -> index
+        }
       }
     });
+
+    this.audioPlayers.forEach((playerRef, index) =>{
+      
+      const audio = playerRef.nativeElement;
+      if (index === indexNum) {
+        audio.currentTime = 0;
+        audio.play().catch(err => console.warn('Audio play prevented:', err));
+        console.log(audio.duration);
+
+      } else {
+        audio.pause();      
+      }
+    });
+  }
+
+  // In your component.ts
+  formatDuration(seconds: number): string {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
+
+  // Handler when video metadata loads
+  onLoadedMetadata(event: Event, item: any) {
+    const video = event.target as HTMLVideoElement;
+    if (video && video.duration) {
+      // Overwrite the static duration string with actual formatted video duration
+      if (item.audio) {
+        item.audio.duration = this.formatDuration(video.duration);
+      }
+    }
   }
 
   // Tap video to toggle Play / Pause
@@ -114,32 +143,10 @@ export class ReelsPage implements OnInit, ViewWillLeave {
 
     if (video.paused) {
       video.play();
-      this.currentAudio?.play();
       reel.isPlaying = true;
     } else {
       video.pause();
-      this.currentAudio?.pause();
       reel.isPlaying = false;
-    }
-  }
-
-  private playAudioForReel(reel: ReelItem): void {
-    if (!reel.audio?.audioUrl) return;
-
-    this.currentAudio = new Audio(reel.audio?.audioUrl);
-    console.log(this.currentAudio);
-    this.currentAudio.loop = true; // Auto-loop audio alongside the reel video
-
-    this.currentAudio
-      .play()
-      .catch((err) => console.warn('Audio playback prevented by browser:', err));
-  }
-
-  private stopCurrentAudio(): void {
-    if (this.currentAudio) {
-      this.currentAudio.pause();
-      this.currentAudio.currentTime = 0;
-      this.currentAudio = null;
     }
   }
 

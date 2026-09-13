@@ -7,11 +7,21 @@
         <video
           #videoPlayer
           [src]="reel.mediaUrl"
-          loop
+          (ended)="onVideoEnded(i)"
           playsinline
           [autoplay]="i === 0"
-          (click)="togglePlayPause(i)">
+          (click)="togglePlayPause(i)"
+          (loadedmetadata)="onLoadedMetadata($event, reel)"
+          (play)="audioPlayer.play()"
+          (pause)="audioPlayer.pause()">
         </video>
+        <audio 
+          #audioPlayer 
+          [src]="reel.audio?.audioUrl">
+        </audio>
+        @if (reel.duration) {
+          <span class="video-duration">{{ reel.duration }}</span>
+        }
       </div>
 
       <!-- 2. Instagram Right-Side Action Controls -->

@@ -77,6 +77,7 @@ export interface ReelItem{
   type:             'POST' | 'REEL' | 'STORY';
   caption?:         string;
   mediaUrl:         string;
+  duration:         number;
   mediaType:        'image' | 'video'; // Use strict union types instead of plain string
   hashtags?:        string[];          // Changed to array of strings
   isLiked?:         boolean;

@@ -53,28 +53,76 @@
     </section>
 
     <div class="post-panel">
-      <article class="card-board" *ngFor="let feed of postList" >
-        <div class="post-header">
-          <div class="divided">
-            <ion-avatar class="avatar-img">
-              <ion-img [src]="feed?.author?.avatarUrl" alt="User Avatar"></ion-img>  
-            </ion-avatar>
-            <div class="avatar-title">
-              <a><span>{{feed?.author?.authorName}}</span></a>
-              <span>{{feed?.audio?.artist}}</span>
+      <article class="card-board" *ngFor="let feed of postList; let i = index" #postCard>
+        @if (feed.mediaType === 'video') {
+          <!-- Video Portion -->
+          <div class="video-content">
+            <div class="video-wrapper">
+              <video
+                #videoPlayer
+                [src]="feed.mediaUrl"
+                autoplay
+                muted
+                preload="metadata"
+                playsinline
+                (play)="audioPlayer.play()"
+                (pause)="audioPlayer.pause()">
+              </video>
+              <audio 
+                #audioPlayer 
+                [src]="feed.audio?.audioUrl">
+              </audio>
             </div>
+            <div class="post-header-abs">
+              <div class="divided">
+                <ion-avatar class="avatar-img">
+                  <ion-img [src]="feed?.author?.avatarUrl" alt="User Avatar"></ion-img>  
+                </ion-avatar>
+                <div class="avatar-title">
+                  <a><span>{{feed?.author?.authorName}}</span></a>
+                  <span>{{feed?.audio?.artist}}</span>
+                </div>
+              </div>
+              <ion-button shape="round" fill="clear" size="small">
+                <ion-icon slot="icon-only" name="ellipsis-horizontal"></ion-icon>
+              </ion-button>
+            </div>
+            @if(feed?.audio !== null){
+              <div size="small" fill="clear" slot="end" (click)="audioPlayer.muted = !audioPlayer.muted" class="btn-absolue">
+                <ion-icon [name]="audioPlayer.muted ? 'volume-mute' : 'volume-high'"></ion-icon>
+              </div>
+            }
           </div>
-          <ion-button shape="round" fill="clear" size="small">
-            <ion-icon slot="icon-only" name="ellipsis-horizontal"></ion-icon>
-          </ion-button>
-        </div>
-
-        <div class="post-content">
-            <ion-img [src]="feed.mediaUrl" class="post-image"></ion-img>
-            <div size="small" fill="clear" slot="end" (click)="previewTrack(feed?.audio, $event)" class="btn-absolue">
-              <ion-icon [name]="isPlayingPreview && isAudioId === feed?.audio?.id ? 'volume-high' : 'volume-mute'"></ion-icon>
+        } @else {
+          <!-- Image Portion -->
+          <div class="post-header">
+            <div class="divided">
+              <ion-avatar class="avatar-img">
+                <ion-img [src]="feed?.author?.avatarUrl" alt="User Avatar"></ion-img>  
+              </ion-avatar>
+              <div class="avatar-title">
+                <a><span>{{feed?.author?.authorName}}</span></a>
+                <span>{{feed?.audio?.artist}}</span>
+              </div>
             </div>
-        </div>
+            <ion-button shape="round" fill="clear" size="small">
+              <ion-icon slot="icon-only" name="ellipsis-horizontal"></ion-icon>
+            </ion-button>
+          </div>
+
+          <div class="post-content">          
+            <ion-img 
+              [src]="feed.mediaUrl" 
+              class="post-image">
+            </ion-img>
+            
+            @if(feed?.audio !== null){
+              <div size="small" fill="clear" slot="end" (click)="previewTrack(feed?.audio, $event)" class="btn-absolue">
+                <ion-icon [name]="isPlayingPreview && isAudioId === feed?.audio?.id ? 'volume-high' : 'volume-mute'"></ion-icon>
+              </div>
+            }
+          </div>
+        }
 
         <div class="post-bottom">
           <div class="toggle-icon">

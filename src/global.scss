@@ -345,18 +345,23 @@ textarea{
             
             .btn-absolue{
                 position: absolute;
-                left: 88%;
+                left: 90%;
                 bottom: 8px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 color: white;
                 font-size: 22px;
-                width: 40px;
-                height: 40px;
+                width: 25px;
+                height: 25px;
                 
                 background: rgba(128, 128, 128, 0.767);
-                border-radius: 50%;                    
+                border-radius: 50%;   
+                
+                ion-icon{
+                    width: 70%;
+                    height: 70%;
+                }
             }
         }
 
@@ -440,6 +445,99 @@ textarea{
         a{
             color: black;
             font-weight: bold;
+        }
+
+        .video-content{
+            position: relative;
+            width: 100%;
+            aspect-ratio: 443 / 450;
+            height: auto;
+            background: black;
+
+            .video-wrapper {
+                width: 100%;
+                height: 100%;
+                overflow: hidden; /* Clips elements spilling outside the viewport */
+                
+                video, iframe {
+                    width: 100vw;
+                    height: 100%;
+                }
+
+                /* Click Mask to catch Play/Pause clicks */
+                .click-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: 2;
+                }
+            }
+
+            .post-header-abs{
+                position: absolute;
+                top: 0;
+                width: 95%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin: 10px;
+                margin-top: 0;
+                height: 40px;
+
+                .divided{
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding-top: 10px;
+                    gap: 10px;
+                    
+                    .avatar-title{
+                        display: flex;
+                        flex-direction: column;
+                        height: 34px;
+
+                        a{
+                            
+                            color: white;
+                            span{
+                                font-size: 14px;
+                            }
+                        }
+                        span{
+                            font-size: 14px;
+                            
+                        color: white;
+                        }
+                    }
+                }
+
+                ion-button{
+                    color: white;
+                }
+            }
+
+            .btn-absolue{
+                position: absolute;
+                left: 90%;
+                bottom: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 22px;
+                width: 25px;
+                height: 25px;
+                
+                background: rgba(128, 128, 128, 0.767);
+                border-radius: 50%;   
+                
+                ion-icon{
+                    width: 70%;
+                    height: 70%;
+                }
+            }
         }
     }
 }
