@@ -41,13 +41,17 @@
     /* Right-side Action Buttons */
     .side-actions {
         position: absolute;
-        right: 16px;
-        bottom: 55px;
+        right: 8px;
+        bottom: 40px;
         display: flex;
         flex-direction: column;
         gap: 20px;
         align-items: center;
         z-index: 10;
+        background: rgba(128, 128, 128, 0.397);
+        width: 40px;
+        padding: 10px 0;
+        border-radius: 14px;
 
         .action-btn {
             display: flex;

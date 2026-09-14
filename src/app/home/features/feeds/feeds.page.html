@@ -44,7 +44,7 @@
       <div class="story-context" *ngFor="let item of highlights">
         <div class="height-light" [class.active]="true">
           <ion-avatar class="person">
-              <ion-img [src]="item.imgUrl" alt="User Avatar"></ion-img>
+              <ion-img [src]="item.author?.avatarUrl" alt="User Avatar"></ion-img>
           </ion-avatar>
         </div>
         <span>{{item?.username}}</span>

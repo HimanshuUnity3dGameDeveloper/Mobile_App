@@ -88,6 +88,21 @@ export interface ReelItem{
   isPlaying?:       boolean;
 }
 
+export interface StoryItem{
+  username:       string;
+  type:             'POST' | 'REEL' | 'STORY';
+  author:         ContentAuthor | null;
+  mediaUrl:       string;
+  mediaType:      'image' | 'video';
+  audio?:         AudioTrack | null;
+  viewers:        string[];
+  viewsCount:     number;
+  expiresAt?:     Date | null;
+  status:         string;
+  createdAt?:     Date;
+  updatedAt?:     Date;
+}
+
 //#endregion
 
 export type PostType = 'post' | 'story' | 'reel';

@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { NavController, ToastController } from '@ionic/angular';
 import { AudioTrack, ContentAuthor, CreatePostPayload } from 'src/app/core/authcontroller/authInterface';
-import { ProfileService } from 'src/app/core/authcontroller/profile-service';
+import { ProfileService } from 'src/app/home/features/profile/profile-service';
 import { PostService } from 'src/app/home/features/post/Post-service';
 import { PreviousRouteServe } from 'src/app/core/previous-route-serve';
 

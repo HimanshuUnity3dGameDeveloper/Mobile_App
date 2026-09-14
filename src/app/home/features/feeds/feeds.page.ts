@@ -3,8 +3,9 @@ import { AudioTrack, CreatePostPayload, ReelItem } from 'src/app/core/authcontro
 import { IonModal } from '@ionic/angular';
 import { forkJoin } from 'rxjs';
 import { PostService } from 'src/app/home/features/post/Post-service';
-import { ProfileService } from 'src/app/core/authcontroller/profile-service';
+import { ProfileService } from 'src/app/home/features/profile/profile-service';
 import { ReelService } from '../reels/reel-service';
+import { FeedService } from './feed.service';
 
 interface HighLight{
   imgUrl: string;
@@ -40,21 +41,23 @@ export class FeedsPage implements OnInit, OnDestroy{
   postList: any[] = [];
   likedByUsers: any[] = [];
 
-  highlights: HighLight[] = [
-    {imgUrl:'assets/images/Slex.jpg', username:'@ayushi.cuteii'},
-    {imgUrl:'assets/images/Magal.avif', username:'@rani.kumari'},
-    {imgUrl:'assets/images/barbidoll.jpg', username:'@priyanka.007'},
-    {imgUrl:'assets/images/Cutipie.jpg', username:'@bhim.kumar'},
-    {imgUrl:'assets/images/rock.avif', username:'@aman.rock'}
+  highlights: any[] = [
   ]
 
   constructor(
     private readonly postServe: PostService,
     private readonly reelServe: ReelService,
-    private readonly profileServe: ProfileService
+    private readonly profileServe: ProfileService,
+    private readonly storyServe: FeedService
   ) { }
 
-  ngOnInit() { 
+  ngOnInit() {
+    this.storyServe.loadStory().subscribe({
+      next: ((story: any)=>{
+        console.log(story);
+        this.highlights = [...story];
+      })
+    })
   }
 
   ionViewWillEnter() {
@@ -180,7 +183,7 @@ export class FeedsPage implements OnInit, OnDestroy{
     }
     return likedBy.includes(this.currentUserId);
   }
-  
+
   toggleLikes(item: any){  
     const userId = item._id;
     if (!userId) {return};

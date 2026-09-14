@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/core/authcontroller/auth-service';
-import { ProfileService } from 'src/app/core/authcontroller/profile-service';
+import { ProfileService } from './profile-service';
 import { PostService } from 'src/app/home/features/post/Post-service';
 import { ToastController } from '@ionic/angular';
 

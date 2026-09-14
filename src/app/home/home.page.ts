@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { NavController } from '@ionic/angular';
 import { filter, Subscription } from 'rxjs';
-import { ProfileService } from '../core/authcontroller/profile-service';
+import { ProfileService } from 'src/app/home/features/profile/profile-service';
 
 
 @Component({

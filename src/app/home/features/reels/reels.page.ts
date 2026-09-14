@@ -2,7 +2,7 @@ import { Component, OnInit, ElementRef, ViewChildren, QueryList, viewChildren} f
 import { register } from 'swiper/element/bundle';
 import { ReelService } from './reel-service';
 import { ReelItem } from 'src/app/core/authcontroller/authInterface';
-import { ProfileService } from 'src/app/core/authcontroller/profile-service';
+import { ProfileService } from 'src/app/home/features/profile/profile-service';
 
 // Register Swiper Custom Elements
 register();
