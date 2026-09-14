@@ -80,7 +80,7 @@ export interface ReelItem{
   duration:         number;
   mediaType:        'image' | 'video'; // Use strict union types instead of plain string
   hashtags?:        string[];          // Changed to array of strings
-  isLiked?:         boolean;
+  likedBy?:         string[];
   likesCount:       number;          // Optional for creation payload
   commentsCount?:   number;       // Optional for creation payload
   sharesCount?:     number;

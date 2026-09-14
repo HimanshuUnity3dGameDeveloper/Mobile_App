@@ -174,11 +174,19 @@ export class FeedsPage implements OnInit, OnDestroy{
     this.loadPost(event);
   }
 
+  isLikedByCurrentUser(likedBy?: string[] | null): boolean {
+    if (!this.currentUserId || !likedBy) {
+      return false;
+    }
+    return likedBy.includes(this.currentUserId);
+  }
+  
   toggleLikes(item: any){  
     const userId = item._id;
     if (!userId) {return};
   
-    this.postServe.updateLikes(userId).subscribe({
+    const update = (item.type ==='REEL' ? this.reelServe.updateLikes(userId) : this.postServe.updateLikes(userId));
+    update.subscribe({
       next: (updatedPost: any) => {
         item.likedBy = updatedPost.likedBy;
         item.likesCount = updatedPost.likesCount;

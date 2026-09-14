@@ -2,6 +2,7 @@ import { Component, OnInit, ElementRef, ViewChildren, QueryList, viewChildren} f
 import { register } from 'swiper/element/bundle';
 import { ReelService } from './reel-service';
 import { ReelItem } from 'src/app/core/authcontroller/authInterface';
+import { ProfileService } from 'src/app/core/authcontroller/profile-service';
 
 // Register Swiper Custom Elements
 register();
@@ -19,6 +20,7 @@ export class ReelsPage implements OnInit {
   private currentAudio: HTMLAudioElement | null = null;
   private activeIndex: number = 0;
   isReelPlay: boolean = false;
+  currentUserId: string | null = null; // Declare property here
 
   // Using direct MP4 files for true Instagram-like behavior
   // reels: ReelItem[] = [
@@ -53,9 +55,16 @@ export class ReelsPage implements OnInit {
   reels: ReelItem[]=[];
   
   constructor(
-    private readonly reelServe: ReelService
+    private readonly reelServe: ReelService,
+    private readonly authServe: ProfileService
   ){}
   ngOnInit(): void {
+
+    this.authServe.loadUserData().subscribe({
+      next: ((user: any)=>{
+        this.currentUserId = user._id;
+      })
+    });
 
     this.reelServe.loadReels().subscribe({
       next: (response: any) => {
@@ -64,7 +73,7 @@ export class ReelsPage implements OnInit {
           this.onplaySwitchScreen(this.activeIndex);
         }, 0);
       }
-    })
+    });
   }
 
   // Handle slide transition: play current, pause others
@@ -150,7 +159,26 @@ export class ReelsPage implements OnInit {
     }
   }
 
-  toggleLike(reel: ReelItem) {
-    reel.isLiked = !reel.isLiked;
+  isLikedByCurrentUser(likedBy?: string[] | null): boolean {
+    if (!this.currentUserId || !likedBy) {
+      return false;
+    }
+    return likedBy.includes(this.currentUserId);
   }
+
+  toggleLike(reel: ReelItem) {
+    const userId = reel._id;
+    if (!userId) {return};
+  
+    this.reelServe.updateLikes(userId).subscribe({
+      next: (updatedPost: any) => {
+        reel.likedBy = updatedPost.likedBy;
+        reel.likesCount = updatedPost.likesCount;
+      },
+      error: (err: any) => {
+        console.error('DB Update failed:', err);
+      }
+    });
+  }
+  
 }

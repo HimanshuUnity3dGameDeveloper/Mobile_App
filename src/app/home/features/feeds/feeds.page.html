@@ -129,8 +129,8 @@
             <div class="left-toggle">
               <div class="likebtn">
                 <ion-icon slot="icon-only" 
-                  [name]="feed?.likedBy?.includes(this.currentUserId) ? 'heart' : 'heart-outline'" 
-                  [class.active]="feed?.likedBy?.includes(this.currentUserId)" 
+                  [name]="isLikedByCurrentUser(feed?.likedBy) ? 'heart' : 'heart-outline'" 
+                  [class.active]="isLikedByCurrentUser(feed?.likedBy)" 
                   (click)="toggleLikes(feed)">
                 </ion-icon>
                 <div class="likeTitle"(click)="openLikesModal(feed)"><span>{{feed?.likesCount}}</span></div>

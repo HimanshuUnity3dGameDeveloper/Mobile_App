@@ -26,8 +26,11 @@
 
       <!-- 2. Instagram Right-Side Action Controls -->
       <div class="side-actions">
-        <div class="action-btn" (click)="toggleLike(reel)">
-          <ion-icon name="heart-outline"></ion-icon>
+        <div class="action-btn">
+          <ion-icon 
+            [name]="isLikedByCurrentUser(reel?.likedBy) ? 'heart' : 'heart-outline'" 
+            [class.active]="isLikedByCurrentUser(reel?.likedBy)"
+            (click)="toggleLike(reel)"></ion-icon>
           <span>{{ reel.likesCount }}</span>
         </div>
 
