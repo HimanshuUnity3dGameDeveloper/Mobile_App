@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ViewChildren, QueryList, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewChildren, QueryList, ElementRef } from '@angular/core';
 import { CommentResponse, User } from 'src/app/core/authcontroller/authInterface';
 import { IonModal, ToastController } from '@ionic/angular';
 import { EMPTY, forkJoin, switchMap, tap } from 'rxjs';
@@ -8,11 +8,6 @@ import { ReelService } from '../reels/reel-service';
 import { FeedService } from './feed.service';
 import { AuthService } from 'src/app/core/authcontroller/auth-service';
 
-interface HighLight{
-  imgUrl: string;
-  username: string;
-}
-
 @Component({
   selector: 'app-feeds',
   templateUrl: './feeds.page.html',
@@ -20,7 +15,7 @@ interface HighLight{
   standalone:false
 })
 
-export class FeedsPage implements OnInit, OnDestroy{
+export class FeedsPage implements OnInit{
   
   @ViewChild(IonModal) modal!: IonModal;
   @ViewChildren('audioPlayer') audioPlayers!: QueryList<ElementRef<HTMLAudioElement>>;
@@ -45,10 +40,7 @@ export class FeedsPage implements OnInit, OnDestroy{
   // List / Array / Collection....
   postList: any[] = [];
   likedByUsers: any[] = [];
-
-  highlights: any[] = [
-  ]
-
+  highlights: any[] = []
   commentList: any[] = [];
 
   constructor(
@@ -89,9 +81,7 @@ export class FeedsPage implements OnInit, OnDestroy{
     }
   }
 
-  ngOnDestroy(){
-  }
-
+  //#region LOAD THE CONTENT FIRST......
   private loadPost(event?: any){
 
     forkJoin({
@@ -145,41 +135,14 @@ export class FeedsPage implements OnInit, OnDestroy{
       },
     });
   }
-
-  /**
-   * Toggles mute/unmute globally across video and audio tags
-   */
-  toggleGlobalMute(): void {
-    
-    this.isPlayingPreview = !this.isPlayingPreview;
-    this.audioPlayers.forEach((playerRef) =>{
-      
-      const audio = playerRef.nativeElement;
-      audio.muted = this.isPlayingPreview;
-    });
-  }
-
+  
   handleRefresh(event: any){
     this.loadUserProfile(event);
     this.loadPost(event);
   }
+  //#endregion
 
-  isLikedByCurrentUser(likedBy?: string[] | null): boolean {
-    if (!this.currentUserId || !likedBy) {
-      return false;
-    }
-    return likedBy.includes(this.currentUserId);
-  }
-
-  isCommentByCurrentUser(user: any):boolean{
-    if(!this.currentUserId || !user) return false;
-
-    // Handles both string IDs and populated user objects
-    const commentUserId = typeof user === 'object' ? (user._id || user.id) : user;
-
-    return this.currentUserId === commentUserId;
-  }
-
+  //#region  PATCH / UPDATE LIKES AND COUNTS...
   toggleLikes(item: any){  
     const userId = item._id;
     if (!userId) {return};
@@ -196,6 +159,13 @@ export class FeedsPage implements OnInit, OnDestroy{
     });
   }
   
+  isLikedByCurrentUser(likedBy?: string[] | null): boolean {
+    if (!this.currentUserId || !likedBy) {
+      return false;
+    }
+    return likedBy.includes(this.currentUserId);
+  }
+
   openLikesModal(feed: any) {
     this.selectedFeedForLikes = feed;
     this.isLikesModalOpen = true;
@@ -217,7 +187,9 @@ export class FeedsPage implements OnInit, OnDestroy{
       }
     })
   }
+  //#endregion
 
+  //#region COMMENT PANEL AND PATCH COUNT..
   openCommitModel(feed: any){
     this.selectedFeedId = feed._id || feed.id;
     this.isCommitModalOpen = true;
@@ -287,6 +259,25 @@ export class FeedsPage implements OnInit, OnDestroy{
     ).subscribe();
   }
 
+  isCommentByCurrentUser(user: any):boolean{
+    if(!this.currentUserId || !user) return false;
+
+    // Handles both string IDs and populated user objects
+    const commentUserId = typeof user === 'object' ? (user._id || user.id) : user;
+
+    return this.currentUserId === commentUserId;
+  }
+  //#endregion
+  
+  toggleGlobalMute(): void {
+    
+    this.isPlayingPreview = !this.isPlayingPreview;
+    this.audioPlayers.forEach((playerRef) =>{
+      
+      const audio = playerRef.nativeElement;
+      audio.muted = this.isPlayingPreview;
+    });
+  }
 
   dismissModal() {
     this.isLikesModalOpen = false;

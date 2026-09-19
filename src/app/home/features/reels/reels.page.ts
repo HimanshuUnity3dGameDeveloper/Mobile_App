@@ -1,9 +1,11 @@
 import { Component, OnInit, ElementRef, ViewChildren, QueryList, viewChildren} from '@angular/core';
 import { register } from 'swiper/element/bundle';
 import { ReelService } from './reel-service';
-import { ReelItem } from 'src/app/core/authcontroller/authInterface';
+import { CommentResponse, ReelItem } from 'src/app/core/authcontroller/authInterface';
 import { ProfileService } from 'src/app/home/features/profile/profile-service';
 import { AuthService } from 'src/app/core/authcontroller/auth-service';
+import { EMPTY, forkJoin, switchMap, tap } from 'rxjs';
+import { FeedService } from '../feeds/feed.service';
 
 // Register Swiper Custom Elements
 register();
@@ -53,12 +55,23 @@ export class ReelsPage implements OnInit {
   //   }
   // ];
 
+  isLikesModalOpen = false;
+  isCommitModalOpen = false;
+  
+  commentPortal={message:''};
+  avatarUrl?: string = '';
+  
+  selectedReelForLikes: any = null;
+  selectedFeedId: string | null = null;
   reels: ReelItem[]=[];
+  likedByUsers: any[] = [];
+  commentList: any[] = [];
   
   constructor(
     private readonly reelServe: ReelService,
     private readonly profileServe: ProfileService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+        private readonly feedServe: FeedService
   ){}
   ngOnInit(): void {
 
@@ -68,6 +81,7 @@ export class ReelsPage implements OnInit {
     this.profileServe.loadUserData().subscribe({
       next: ((user: any)=>{
         this.currentUserId = user._id;
+        this.avatarUrl = user.avatarUrl?.trim(); 
       })
     });
 
@@ -81,6 +95,7 @@ export class ReelsPage implements OnInit {
     });
   }
 
+  //#region VIDEO CONTENT....
   // Handle slide transition: play current, pause others
   onSlideChange(event: any) {
     const newIndex = event.detail[0]?.activeIndex ?? 0;
@@ -163,14 +178,9 @@ export class ReelsPage implements OnInit {
       reel.isPlaying = false;
     }
   }
-
-  isLikedByCurrentUser(likedBy?: string[] | null): boolean {
-    if (!this.currentUserId || !likedBy) {
-      return false;
-    }
-    return likedBy.includes(this.currentUserId);
-  }
-
+  //#endregion
+  
+  //#region  PATCH / UPDATE LIKES AND COUNTS...
   toggleLike(reel: ReelItem) {
     const userId = reel._id;
     if (!userId) {return};
@@ -186,4 +196,112 @@ export class ReelsPage implements OnInit {
     });
   }
   
+  isLikedByCurrentUser(likedBy?: string[] | null): boolean {
+    if (!this.currentUserId || !likedBy) {
+      return false;
+    }
+    return likedBy.includes(this.currentUserId);
+  }
+
+  openLikesModal(Reel: ReelItem) {
+    this.selectedReelForLikes = Reel;
+    this.isLikesModalOpen = true;
+
+    const userIds: string[] = Reel?.likedBy || [];
+
+    if(userIds.length === 0){
+      this.likedByUsers = [];
+      return;
+    }
+    
+    const currentUser = userIds.map((id) =>{
+      return this.profileServe.loadUserDataById(id);
+    })
+
+    forkJoin(currentUser).subscribe({
+      next: (userData: any[]) => {
+        this.likedByUsers = userData;
+      }
+    })
+  }
+  //#endregion
+
+  //#region COMMENT PANEL AND PATCH COUNT..
+  openCommitModel(feed: any){
+    this.selectedFeedId = feed._id || feed.id;
+    this.isCommitModalOpen = true;
+    this.loadComments(feed._id);
+  }
+
+  loadComments(id: string){
+    if(!id) return;
+    this.feedServe.getCommentsByFeed(id).subscribe({
+      next:(response)=>{
+        this.commentList = Array.isArray(response) ? response : [];
+
+        const usr = response.map((el)=>{
+          return this.profileServe.loadUserDataById(el.userID)
+        });
+
+        forkJoin(usr).subscribe({
+          next: (userData: any[]) => {
+            this.commentList = this.commentList.map((comment, index)=>({
+              ...comment,
+              userID: userData[index]
+            }));
+          }
+        });
+      },
+      error: (err) => {
+        console.error(err.message);
+      }
+    })
+  }
+    
+  onSubmitComment(){
+
+    if(!this.currentUserId || !this.selectedFeedId || !this.commentPortal.message?.trim()) return;
+    const payload: CommentResponse = {
+      feedId: this.selectedFeedId,
+      userID: this.currentUserId,
+      content: this.commentPortal.message,
+      likeCount:0,
+      replyCount:0      
+    }
+
+    this.feedServe.createNewComment(payload).pipe(
+      switchMap((result) => {
+        // 1. Instantly reset inputs, close modal, and re-fetch comment list
+        this.commentPortal.message = '';
+        this.isCommitModalOpen = false;
+        this.loadComments(result.feedId);
+
+        // 2. Find the target item in postList matching feedId
+        const targetItem = this.reels.find((item) => (item._id) === result.feedId);
+
+        if (!targetItem) return EMPTY;
+
+        // 3. Trigger single HTTP call based on item type
+        const update$ =  this.reelServe.commentUpdate(result.feedId);
+
+        return update$.pipe(
+          tap((updateResult: any) => {
+            // 4. Update commentsCount directly on postList item
+            targetItem.commentsCount = updateResult.commentsCount;
+          })
+        );
+      })
+    ).subscribe();
+  }
+
+  isCommentByCurrentUser(user: any):boolean{
+    if(!this.currentUserId || !user) return false;
+
+    // Handles both string IDs and populated user objects
+    const commentUserId = typeof user === 'object' ? (user._id || user.id) : user;
+
+    return this.currentUserId === commentUserId;
+  }
+  //#endregion
+    
 }

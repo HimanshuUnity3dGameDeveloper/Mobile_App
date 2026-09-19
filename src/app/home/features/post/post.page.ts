@@ -131,6 +131,7 @@ export class PostPage implements OnInit {
       },
     });
   }
+  
   onChangePost(id: string){
     this.selectPost = id;
     
