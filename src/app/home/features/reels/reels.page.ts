@@ -3,6 +3,7 @@ import { register } from 'swiper/element/bundle';
 import { ReelService } from './reel-service';
 import { ReelItem } from 'src/app/core/authcontroller/authInterface';
 import { ProfileService } from 'src/app/home/features/profile/profile-service';
+import { AuthService } from 'src/app/core/authcontroller/auth-service';
 
 // Register Swiper Custom Elements
 register();
@@ -56,11 +57,15 @@ export class ReelsPage implements OnInit {
   
   constructor(
     private readonly reelServe: ReelService,
-    private readonly authServe: ProfileService
+    private readonly profileServe: ProfileService,
+    private readonly authService: AuthService
   ){}
   ngOnInit(): void {
 
-    this.authServe.loadUserData().subscribe({
+    const session = this.authService.getSession();
+    if(!session.isAuthenticated) return;
+
+    this.profileServe.loadUserData().subscribe({
       next: ((user: any)=>{
         this.currentUserId = user._id;
       })

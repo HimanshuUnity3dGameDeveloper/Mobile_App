@@ -4,6 +4,7 @@ import { AudioTrack, ContentAuthor, CreatePostPayload } from 'src/app/core/authc
 import { ProfileService } from 'src/app/home/features/profile/profile-service';
 import { PostService } from 'src/app/home/features/post/Post-service';
 import { PreviousRouteServe } from 'src/app/core/previous-route-serve';
+import { AuthService } from 'src/app/core/authcontroller/auth-service';
 
 @Component({
   selector: 'app-post',
@@ -100,10 +101,21 @@ export class PostPage implements OnInit {
     private readonly profileServe: ProfileService,
     private readonly postServe: PostService,
     private readonly previousRoute: PreviousRouteServe,
-    private readonly toastController: ToastController
+    private readonly toastController: ToastController,
+        private readonly authServe: AuthService
   ) { }
 
   ngOnInit() {
+    const session = this.authServe.getSession();
+    if(!session.isAuthenticated)
+    { 
+      return;
+    }
+
+    this.loadUser();
+  }
+
+  loadUser(){
     this.profileServe.loadUserData().subscribe({
       next: (userData) => {
         this.profile = {
@@ -119,7 +131,6 @@ export class PostPage implements OnInit {
       },
     });
   }
-
   onChangePost(id: string){
     this.selectPost = id;
     

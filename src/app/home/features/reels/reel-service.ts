@@ -158,4 +158,9 @@ export class ReelService {
       })
     );
   }
+
+  // 5. COMMENT UPDATE..
+  commentUpdate(id: string){
+    return this.http.patch(`${environment.apiUrl}/reel/${id}/comment`, {});
+  }
 }

@@ -45,9 +45,11 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    // Enables vertical scroll bar inside content
     padding: 0;
     margin: 0;
 
+    
     .inner-scroll{
         padding: 0;
     }
@@ -84,11 +86,28 @@
                 gap: 2px;
 
                 h2{
-                    font-size: 16px;
+                    font-size: 14px;
                     margin: 0;
                 }
                 span{
+                    font-size: 10px;
+                    margin-left: 5px;
+                }
+
+                p{
+                    margin: 0;
                     font-size: 12px;
+                    // Fix the width to your desired value (e.g., 300px or 100%)
+                    width: 100%; 
+                    max-width: 300px; // Set your custom target width here
+
+                    // Let height adjust automatically to fit content
+                    height: auto; 
+
+                    // Essential text-wrapping rules
+                    white-space: normal;       // Allows standard line breaks
+                    overflow-wrap: break-word; // Breaks long words if they exceed container width
+                    word-break: break-word;
                 }
             }
 
@@ -117,6 +136,15 @@
 
 .commit-modal{
 
+    ion-content {
+        --height: 100%;
+        --overflow: auto;
+
+        &::part(scroll) {
+           overflow-y: auto; // Enables inner vertical scrolling inside Shadow DOM
+        }
+    }
+
     .ion-padding{
         --padding-bottom: 70px;
     }
@@ -126,6 +154,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        padding: 0 10px;
 
         .avatar{
             width: 48px;
@@ -158,6 +187,7 @@
             color: #49525f;
             font-size: 21px;
         }
+
     }
 }
 
