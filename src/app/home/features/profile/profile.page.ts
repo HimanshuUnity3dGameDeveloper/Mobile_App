@@ -1,11 +1,10 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Router } from '@angular/router';
 import { AuthService } from 'src/app/core/authcontroller/auth-service';
 import { ProfileService } from './profile-service';
-import { PostService } from 'src/app/home/features/post/Post-service';
-import { ToastController } from '@ionic/angular';
-import { UserProfile } from 'src/app/core/authcontroller/authInterface';
+import { PostService } from 'src/app/home/other-features/post/Post-service';
+import { ActionSheetController, NavController, ToastController } from '@ionic/angular';
+import { ContentAuthor, User } from 'src/app/core/authcontroller/authInterface';
 
 @Component({
   selector: 'app-profile',
@@ -17,7 +16,19 @@ import { UserProfile } from 'src/app/core/authcontroller/authInterface';
 export class ProfilePage implements OnInit {
 
   //#region User Details...
-  user: UserProfile | null = null;
+  user: User | null = null;
+  selectedFile: File | null = null;
+  previewPath: string | null = null;
+  isSelected: boolean = false;
+  
+  editPortal = { edit_name: '', username:'', pronouns: '', bio: ''};
+  genders = [
+    { code: 'M', name: 'Male' },
+    { code: 'F', name: 'Female' },
+    { code: 'O', name: 'Other' }
+  ];
+  selectGender: string = 'M';
+
   currentUserId: string = '';
   isPostModalOpen = false;
 
@@ -27,6 +38,8 @@ export class ProfilePage implements OnInit {
   //#endregion
 
   isFollowing: boolean = false;
+  isEditProfile: boolean = false;
+  isTaken: boolean | null = null;
 
   isGrid = true;
   isDraft = false;
@@ -36,17 +49,22 @@ export class ProfilePage implements OnInit {
 
   posts: any[] = [];
   showPost: any[] = [];
+  checkUser: any[] = [];
+  // Keep track of original values to avoid redundant updates/checks
+  private originalUserData: any = {};
 
   constructor(
-    private router: Router,
+    private readonly actionSheetCtrl: ActionSheetController,
     private readonly authServe: AuthService,
     private readonly postServe: PostService,
     private readonly profileServe: ProfileService,
-    private readonly toastController: ToastController
+    private readonly toastController: ToastController,
   ) {}
 
   ngOnInit() {
-
+  }
+  
+  ionViewWillEnter() {
     const session = this.authServe.getSession();
     if(!session.isAuthenticated)
     { 
@@ -56,9 +74,17 @@ export class ProfilePage implements OnInit {
     {
       this.loadUserProfile();
       this.updatePost();
+
+      this.originalUserData = {
+        fullname: this.user?.fullname,
+        username: this.user?.username,
+        pronouns: this.user?.pronouns,
+        bio: this.user?.bio
+      };
     }
   }
-  
+
+  //#region MAIN PROFILE CONTENT..
   // 1. USER DATA.....
   loadUserProfile(event?: any){
     this.profileServe.loadUserData().subscribe({
@@ -66,6 +92,13 @@ export class ProfilePage implements OnInit {
         this.user = response;
         this.currentUserId = response?._id;
 
+        const payload: any = {
+          avatarUrl: this.user?.avatarUrl,
+          authorName: this.user?.username,
+        }
+
+        console.log(payload);
+        this.postServe.updatePostProfile(payload).subscribe();
         // Hide spinner if triggered by pull-to-refresh
         if (event) {
           event.target.complete();
@@ -112,7 +145,7 @@ export class ProfilePage implements OnInit {
       error: (err) => {
         console.error('Failed to load user profile:', err);
       }
-    })
+    });
   }
 
   // 3. DELETE POST..
@@ -147,6 +180,7 @@ export class ProfilePage implements OnInit {
     }
     console.log(this.showPost);
   }
+  //#endregion
 
   // 5. FOLLOWING PEOPLES
   toggleLikes(item: any){  
@@ -155,7 +189,6 @@ export class ProfilePage implements OnInit {
   
     this.postServe.updateLikes(userId).subscribe({
       next: (updatedPost: any) => {
-        item.likedBy = updatedPost.likedBy;
         item.likesCount = updatedPost.likesCount;
       },
       error: (err: any) => {
@@ -177,13 +210,10 @@ export class ProfilePage implements OnInit {
     // }
   }
 
-  editProfile(){
-
-  } 
-
-  openPostPanel(){
-    this.router.navigate(['./post']);
+  goToEditProfile() {
+    this.isEditProfile = !this.isEditProfile
   }
+
   onLogout(){
     // Remove focus from any active button to prevent accessibility focus warnings
     if (document.activeElement instanceof HTMLElement) {
@@ -204,4 +234,127 @@ export class ProfilePage implements OnInit {
 
     await toast.present();
   }
+
+  //#region  UPLOAD PROFILE PHOTO...
+  async pickPhotoFromGallery(){
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: 'Select Avatar Source',
+      buttons: [
+        {
+          text: 'Take Photo',
+          icon: 'camera',
+          handler: () => this.captureImage(CameraSource.Camera),
+        },
+        {
+          text: 'Choose from Gallery',
+          icon: 'image',
+          handler: () => this.captureImage(CameraSource.Photos),
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+      ],
+    });
+    await actionSheet.present();
+  }
+
+  async captureImage(source: CameraSource){
+    try{
+
+      const image = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: true,
+        resultType: CameraResultType.Uri,
+        source: source // Opens gallery instead of camera
+      });
+
+      if(image.webPath){
+        this.previewPath = image.webPath;
+        if (this.user) {
+          this.user.avatarUrl = this.previewPath;
+        }
+        const res = (await fetch(image.webPath));
+        const resBlob = await res.blob();
+        const resFile = new File([resBlob],'avatar.jpg', { type: resBlob.type })
+
+        this.selectedFile = resFile;
+        this.isSelected = true;
+
+        this.authServe.uploadAnImage(this.currentUserId, this.selectedFile).subscribe(
+        { next: (res: any) => 
+          {        
+            this.selectedFile = null;
+            console.log(res);
+          },
+          error: (err) => {
+            console.error('Upload failed:', err)
+          }
+        });
+      }
+    } catch (error) {
+      // Handles permission denied, device unsupported, or runtime errors
+      console.error('Failed to pick image from gallery:', error);
+    }
+  }
+
+  //#endregion
+
+  //#region EDIT PROFILE..
+
+  // onFieldBlur( value?: string): void {
+  //   if (!value) return;
+
+  //   const trimmedValue = value.trim();
+
+  //   if(trimmedValue === this.originalUserData.username){
+  //     this.isTaken = null;
+  //     return;
+  //   }
+    
+  //   this.profileServe.checkFieldExist().subscribe({
+  //       next: (data: any) => {
+  //         this.checkUser = data;
+  //         this.isTaken = this.checkUser.some(item => item.username === trimmedValue)
+  //       },
+  //       error: (err) => console.error('Duplicate check failed', err)
+  //     });
+  // }
+
+  
+  editandupdateprofile(){
+    if(!this.currentUserId) return;
+    
+    const payload: User = {
+      fullname: this.user?.fullname ?? '',
+      username: this.user?.username ?? '',
+      pronouns: this.user?.pronouns,
+      bio: this.user?.bio
+    }
+    this.profileServe.updateUserProfile(payload).subscribe({
+      next:()=>{
+        this.isEditProfile = false;
+        this.loadUserProfile();
+        this.updatePost();
+      },
+      error(err){
+        console.error('Update failed with error:', err);
+
+        // Handle duplicate username (HTTP 409 or 500 containing duplicate errors)
+        if (err.status === 409 || err.error?.message?.includes('duplicate')) {
+          console.log('Username already exists' + err);
+        } else {
+          console.log('Server error occurred while updating profile.');
+        }
+      }
+    });
+  }
+  //#endregion
+
+  //#region Gender...
+  onSelectGender(value: string) {
+    console.log('Selected country code:', value);
+  }
+  //#endregion
+  
 }

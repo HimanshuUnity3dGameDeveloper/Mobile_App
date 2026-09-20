@@ -62,7 +62,7 @@
                 <video
                   #videoPlayer
                   appIntersectionObserver
-                  (isPercentVisible)="$event ? videoPlayer.play() : videoPlayer.pause()"
+                  (isPercentVisible)="$event ? videoPlayer.play().catch(noop) : videoPlayer.pause()"
                   [src]="feed.mediaUrl"
                   autoplay
                   muted
@@ -71,9 +71,9 @@
                   (play)="audioPlayer.play()"
                   (pause)="audioPlayer.pause()">
                 </video>
-                <audio 
-                  #audioPlayer 
-                  [src]="feed.audio?.audioUrl">
+                <audio #audioPlayer 
+                  [src]="feed.audio?.audioUrl" 
+                  [muted]="isPlayingPreview">
                 </audio>
               </div>
               <div class="post-header-abs">
@@ -117,11 +117,11 @@
                 playsinline
                 class="post-image"
                 appIntersectionObserver
-                (isPercentVisible)="$event ? audioPlayer.play() : audioPlayer.pause()">
+                (isPercentVisible)="$event ? audioPlayer.play().catch(noop) : audioPlayer.pause()">
               </ion-img>
-              <audio 
-                #audioPlayer 
-                [src]="feed.audio?.audioUrl">
+              <audio #audioPlayer 
+                [src]="feed.audio?.audioUrl" 
+                [muted]="isPlayingPreview">
               </audio>
             </div>
           }

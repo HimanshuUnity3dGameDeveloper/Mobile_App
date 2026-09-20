@@ -24,7 +24,7 @@ export class AuthService {
   // Session 2.make sessonSubject observable so that other pages can subscribe.. 
   readonly session$ = this.sessionSubject.asObservable();
   
-  //1. REGISTER...
+  //1. REGISTER  NEW USER...
   register(userData: User): Observable<User> {
     return this.http.post<User>(`${environment.apiUrl}/auth/register`, userData).pipe(
       catchError((error: HttpErrorResponse) => {
@@ -34,12 +34,12 @@ export class AuthService {
     );
   }
 
-  // 2. VERIFICATION...
+  // 2. USER VERIFICATION...
   verifyOtp(payload: { userId: string; otpCode: string }): Observable<User> {
     return this.http.post<User>(`${environment.apiUrl}/auth/verify-otp`, payload);
   }
 
-  // 3. Upload Image...
+  // 3. PROFILE PHOTO OF USER...
   uploadAnImage(userid: string, file: File){
     
     const formData = new FormData();

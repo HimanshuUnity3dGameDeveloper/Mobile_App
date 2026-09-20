@@ -1,10 +1,3 @@
-// Registeration Data....
-export interface UserProfile{
-  fullname: string;
-  username: string;
-  avatarUrl?: string;
-}
-
 export interface SessionState{
   token: string | null;
   isAuthenticated: boolean;
@@ -12,11 +5,11 @@ export interface SessionState{
 
 export interface User{
   _id?: string;
-  email: string;
-  phoneNumber: string;
+  email?: string;
+  phoneNumber?: string;
   username:string;
   fullname:string;
-  
+  pronouns?:string;
   // Mark missing fields as optional
   password?: string;
   avatarUrl?: string;
@@ -48,7 +41,7 @@ export interface AudioTrack {
 //#region POST CONTENT...
 
 export interface ContentAuthor{  
-    userId:          string;
+    userId?:          string;
     authorName:      string;
     avatarUrl:       string;
     isFollowing?:    boolean;

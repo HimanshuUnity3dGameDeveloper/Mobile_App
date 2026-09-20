@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, ViewChildren, QueryList, ElementRef } fro
 import { CommentResponse, User } from 'src/app/core/authcontroller/authInterface';
 import { IonModal, ToastController } from '@ionic/angular';
 import { EMPTY, forkJoin, switchMap, tap } from 'rxjs';
-import { PostService } from 'src/app/home/features/post/Post-service';
+import { PostService } from 'src/app/home/other-features/post/Post-service';
 import { ProfileService } from 'src/app/home/features/profile/profile-service';
 import { ReelService } from '../reels/reel-service';
 import { FeedService } from './feed.service';
@@ -19,7 +19,7 @@ export class FeedsPage implements OnInit{
   
   @ViewChild(IonModal) modal!: IonModal;
   @ViewChildren('audioPlayer') audioPlayers!: QueryList<ElementRef<HTMLAudioElement>>;
-  
+  noop = () => {};
   user: User | null = null;
   // Boolean content
   isLikesModalOpen = false;
@@ -31,7 +31,7 @@ export class FeedsPage implements OnInit{
   commentPortal={message:''};
   
   // User content...
-  avatarUrl?: string = '';
+  avatarUrl?: string = 'assets/icon/favicon.png';
   username: string = '';
   currentUserId: string | null = null; // Declare property here
 
@@ -64,7 +64,7 @@ export class FeedsPage implements OnInit{
         next: ((story: any)=>{
           this.highlights = [...story];
         })
-      })
+      });
     }    
   }
 
@@ -108,18 +108,18 @@ export class FeedsPage implements OnInit{
             event.target.complete();
           }
         }
-    })
+    });
   }
   
   private loadUserProfile(event?: any){
             
     this.profileServe.loadUserData().subscribe({
       next: (userData: any) => {
+        this.user = userData;
         this.username = userData.username;
         this.avatarUrl = userData.avatarUrl?.trim(); 
         this.currentUserId = userData._id;
-        console.log(this.avatarUrl);
-                
+
         // Hide spinner if triggered by pull-to-refresh
         if (event) {
           event.target.complete();
@@ -133,7 +133,7 @@ export class FeedsPage implements OnInit{
           event.target.complete();
         }
       },
-    });
+    });    
   }
   
   handleRefresh(event: any){

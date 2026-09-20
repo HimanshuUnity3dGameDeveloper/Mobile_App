@@ -170,7 +170,7 @@ export class LoginPage implements OnInit {
     this.step = 'REGISTER';
   }
 
-  // 1. SELECT THE FILE
+  //#region  UPLOAD PROFILE PHOTO...
   async pickPhotoFromGallery(){
     const actionSheet = await this.actionSheetCtrl.create({
       header: 'Select Avatar Source',
@@ -256,6 +256,7 @@ export class LoginPage implements OnInit {
       }
     });
   }
+  //#endregion
 
   skipForNow(){
     this.isCreateModel=false;
@@ -267,7 +268,7 @@ export class LoginPage implements OnInit {
   async presentSuccessToast(messageText: string) {
     const toast = await this.toastController.create({
       message: messageText,
-      duration: 2500,
+      duration: 500,
       position: 'bottom',
       color: 'success',
       icon: 'checkmark-circle-outline', // Optional icon

@@ -76,4 +76,14 @@ export class ProfileService {
       })
     );
   }
+
+  // 3. Update the user data..
+  updateUserProfile(data: User):Observable<User>{
+    return this.http.patch<User>(`${environment.apiUrl}/auth/user`, data);
+  }
+
+  //4. Check field Exits..
+  checkFieldExist(){
+    return this.http.get(`${environment.apiUrl}/auth`);
+  }
 }

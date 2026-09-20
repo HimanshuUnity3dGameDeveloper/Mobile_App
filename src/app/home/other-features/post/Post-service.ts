@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, catchError, map, Observable, throwError } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { CreatePostPayload, MediaComposerState, OverlayText, PostResponse, PostType } from '../../../core/authcontroller/authInterface';
+import { CreatePostPayload, MediaComposerState, OverlayText, PostResponse, PostType, ContentAuthor } from '../../../core/authcontroller/authInterface';
 
 @Injectable({
   providedIn: 'root',
@@ -162,5 +162,10 @@ export class PostService {
   // 6. COMMENT UPDATE..
   commentUpdate(id: string){
     return this.http.patch(`${environment.apiUrl}/post/${id}/comment`, {});
+  }
+
+  // 7. Update Profile..
+  updatePostProfile(data: ContentAuthor):Observable<any>{
+    return this.http.patch(`${environment.apiUrl}/post/author`,data);
   }
 }

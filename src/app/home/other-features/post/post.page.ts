@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { NavController, ToastController } from '@ionic/angular';
 import { AudioTrack, ContentAuthor, CreatePostPayload } from 'src/app/core/authcontroller/authInterface';
 import { ProfileService } from 'src/app/home/features/profile/profile-service';
-import { PostService } from 'src/app/home/features/post/Post-service';
+import { PostService } from 'src/app/home/other-features/post/Post-service';
 import { PreviousRouteServe } from 'src/app/core/previous-route-serve';
 import { AuthService } from 'src/app/core/authcontroller/auth-service';
 
@@ -102,7 +102,7 @@ export class PostPage implements OnInit {
     private readonly postServe: PostService,
     private readonly previousRoute: PreviousRouteServe,
     private readonly toastController: ToastController,
-        private readonly authServe: AuthService
+    private readonly authServe: AuthService
   ) { }
 
   ngOnInit() {

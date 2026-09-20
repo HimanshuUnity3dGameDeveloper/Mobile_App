@@ -136,7 +136,6 @@ export class ReelsPage implements OnInit {
       if (index === indexNum) {
         audio.currentTime = 0;
         audio.play().catch(err => console.warn('Audio play prevented:', err));
-        console.log(audio.duration);
 
       } else {
         audio.pause();      
