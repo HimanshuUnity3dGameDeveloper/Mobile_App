@@ -28,9 +28,9 @@
     
     <section class="story-panel">
       <div class="story-context">
-        <div class="height-light" [class.active]="false">
+        <div class="height-light" [class.active]="isActiveStory">
           <div class="story-relative">
-            <ion-avatar class="person">
+            <ion-avatar class="person" (click)="openStoryPanel()">
               <ion-img [src]="avatarUrl" alt="User Avatar"></ion-img>
             </ion-avatar>
             <ion-button class="story-add-absolute" fill="clear" shape="round" size="small">
@@ -43,7 +43,7 @@
       
       <div class="story-context" *ngFor="let item of highlights">
         <div class="height-light" [class.active]="true">
-          <ion-avatar class="person">
+          <ion-avatar class="person" (click)="openStoryPanel()">
               <ion-img [src]="item.author?.avatarUrl" alt="User Avatar"></ion-img>
           </ion-avatar>
         </div>
@@ -252,6 +252,18 @@
             <ion-icon slot="icon-only" name="heart-outline"></ion-icon>
           </div>
         </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal [isOpen]="isStoryModalOpen" (didDismiss)="isStoryModalOpen = false">
+    <ng-template>
+      <ion-content>
+        <ion-toolbar>
+          <ion-button shape="round" slot="end" (click)="isStoryModalOpen = false">
+            <ion-icon slot="icon-only" name="chevron-backward-outline"></ion-icon>
+          </ion-button>
+        </ion-toolbar>
       </ion-content>
     </ng-template>
   </ion-modal>

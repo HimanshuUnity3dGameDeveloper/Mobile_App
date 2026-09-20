@@ -58,10 +58,7 @@
       </div>
 
       <div class="profileBio">
-        <p>💡 chasing moments & light<br>
-          📍 [Roorkee, UK]<br>
-          📸 capturing reality, one frame at a time. ✨ <br>
-          📩 contact / collab: Him@gmail.com<br>
+        <p>{{user?.bio}}
         </p>
       </div>
 
@@ -228,10 +225,10 @@
           </div>
 
           <div class="edit-card-board">
-            <div class="edit-gender">
+            <div class="edit-gender" *ngIf="user">
               <span>Gender</span>
-              <select id="gender" name="gender" #gender="ngModel" [(ngModel)]="selectGender" (ngModelChange)="onSelectGender($event)">
-                <option *ngFor="let gender of genders" [value]="gender.code">{{gender.name}}</option>
+              <select id="gender" name="gender" #gender="ngModel" [(ngModel)]="user.gender" (ngModelChange)="onSelectGender($event)">
+                <option *ngFor="let gender of genders" [value]="gender.name">{{gender.name}}</option>
               </select>
             </div>
           </div>

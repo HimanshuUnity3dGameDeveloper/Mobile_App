@@ -17,6 +17,8 @@ export interface User{
   createdAt?: Date;
   updatedAt?: Date;
   isVerified?: boolean;
+  links?: string[];
+  gender?: 'Male' | 'Female' | 'Other' | string | null;
   otpCode?: string;
   otpExpireAt?: string;
 }

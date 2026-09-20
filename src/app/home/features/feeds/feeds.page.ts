@@ -24,7 +24,9 @@ export class FeedsPage implements OnInit{
   // Boolean content
   isLikesModalOpen = false;
   isCommitModalOpen = false;
+  isStoryModalOpen = false;
   isPlayingPreview: boolean = false;
+  isActiveStory: boolean = false;
 
   selectedFeedForLikes: any = null;
   selectedFeedId: string | null = null;
@@ -40,7 +42,8 @@ export class FeedsPage implements OnInit{
   // List / Array / Collection....
   postList: any[] = [];
   likedByUsers: any[] = [];
-  highlights: any[] = []
+  selfStory:any [] = [];
+  highlights: any[] = [];
   commentList: any[] = [];
 
   constructor(
@@ -53,19 +56,7 @@ export class FeedsPage implements OnInit{
   ) { }
 
   ngOnInit() {
-    const session = this.authServe.getSession();
-    if(!session.isAuthenticated)
-    { 
-      return;
-    }
-    else
-    {
-      this.feedServe.loadStory().subscribe({
-        next: ((story: any)=>{
-          this.highlights = [...story];
-        })
-      });
-    }    
+      
   }
 
   ionViewWillEnter() {
@@ -78,6 +69,17 @@ export class FeedsPage implements OnInit{
     {
       this.loadUserProfile();
       this.loadPost();
+
+      this.postServe.loadAllStory().subscribe({
+        next: ((story: any)=>{
+          const storyList: any[] = story;
+          this.selfStory = storyList.find(item => item.author?.userId === this.user?._id);
+          if(this.selfStory){
+            this.isActiveStory =true;
+          }
+          this.highlights = storyList.filter(item => item.author?.userId !== this.user?._id);
+        })
+      });
     }
   }
 
@@ -95,6 +97,7 @@ export class FeedsPage implements OnInit{
           this.postList = combined.sort((a, b) => 
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
+
           // Hide spinner if triggered by pull-to-refresh
           if (event) {
             event.target.complete();
@@ -269,6 +272,11 @@ export class FeedsPage implements OnInit{
   }
   //#endregion
   
+  //#region STORY Panel...
+  openStoryPanel(){
+    this.isStoryModalOpen = true;
+  }
+  //#endregion
   toggleGlobalMute(): void {
     
     this.isPlayingPreview = !this.isPlayingPreview;

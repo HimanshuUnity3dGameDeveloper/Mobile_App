@@ -329,8 +329,10 @@ export class ProfilePage implements OnInit {
       fullname: this.user?.fullname ?? '',
       username: this.user?.username ?? '',
       pronouns: this.user?.pronouns,
-      bio: this.user?.bio
+      bio: this.user?.bio,
+      gender: this.user?.gender      
     }
+
     this.profileServe.updateUserProfile(payload).subscribe({
       next:()=>{
         this.isEditProfile = false;
@@ -353,7 +355,7 @@ export class ProfilePage implements OnInit {
 
   //#region Gender...
   onSelectGender(value: string) {
-    console.log('Selected country code:', value);
+    if(this.user) this.user.gender = value;
   }
   //#endregion
   
