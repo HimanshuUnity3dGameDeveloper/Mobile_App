@@ -48,6 +48,8 @@ export class ProfilePage implements OnInit {
   activeTab: string = 'posts';
 
   posts: any[] = [];
+  followerList: any[] = [];
+  followingList: any[] =[];
   showPost: any[] = [];
   checkUser: any[] = [];
   // Keep track of original values to avoid redundant updates/checks
@@ -58,7 +60,7 @@ export class ProfilePage implements OnInit {
     private readonly authServe: AuthService,
     private readonly postServe: PostService,
     private readonly profileServe: ProfileService,
-    private readonly toastController: ToastController,
+    private readonly toastController: ToastController
   ) {}
 
   ngOnInit() {
@@ -74,6 +76,7 @@ export class ProfilePage implements OnInit {
     {
       this.loadUserProfile();
       this.updatePost();
+      this.updateFollowList();
 
       this.originalUserData = {
         fullname: this.user?.fullname,
@@ -96,8 +99,6 @@ export class ProfilePage implements OnInit {
           avatarUrl: this.user?.avatarUrl,
           authorName: this.user?.username,
         }
-
-        console.log(payload);
         this.postServe.updatePostProfile(payload).subscribe();
         // Hide spinner if triggered by pull-to-refresh
         if (event) {
@@ -195,19 +196,6 @@ export class ProfilePage implements OnInit {
         console.error('DB Update failed:', err);
       }
     });
-  }
-
-  updateFollowingList()
-  {
-    // if(this.isFollowing){
-    //   this.following = (Number(this.following) || 0) + 1;
-    //   this.updateFollowing();
-    // }
-    // else
-    // {      
-    //   this.following = (Number(this.following) || 0) - 1;
-    //   this.updateFollowing();
-    // }
   }
 
   goToEditProfile() {
@@ -359,4 +347,53 @@ export class ProfilePage implements OnInit {
   }
   //#endregion
   
+  //#region following...
+
+  updateFollowList(){
+    this.profileServe.callAllFollowers().subscribe({
+      next: ((response: any)=>{
+        const followList = [...response];
+        
+        // 1. Separate the follower and following ids..
+        const follower = followList.filter(item => item.followerId === this.user?._id);
+        const following = followList.filter(item => item.followingId === this.user?._id);
+
+        // 2. Set the count by lenghts...
+        this.followerNum = follower.length;
+        this.followingNum = following.length;
+
+        // 3. Extract actual userid..
+        const followerUserId = followList.map(item => item.followerId);
+        const followingUserId = followList.map(item => item.followingId);
+
+        // 3. Load complete user profiles (Batch fetch or single request)
+        if(followerUserId.length){
+          this.loadUserData(followerUserId, 'follower');
+        }else{
+          this.loadUserData(followingUserId, 'following');
+        }
+      }),
+      error(er){
+        console.log(er);
+      }
+    });
+  }
+
+  private loadUserData(userIds: string[], type: 'follower' | 'following'){
+    userIds.forEach(userId => {
+      this.profileServe.loadUserDataById(userId).subscribe({
+        next: (response: any) => {
+          if(type === 'follower') {
+            this.followerList = response;
+          } else {
+            this.followingList = response;
+          }
+        },
+        error: er => {
+          console.log(er);
+        }
+      });
+    });
+  }
+  //#endregion
 }

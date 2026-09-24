@@ -67,6 +67,7 @@
           <ion-button size="small" fill="outline" color="light">Follow</ion-button>
         </div>
         <p class="description">{{ reel?.caption }}</p>
+        <ion-range [min]="0" [max]="300" [value]="currentTime" (ionKnobMoveStart)="onDragStart" (ionInput)="onSliderChange($event)" (ionKnobMoveEnd)="onDragEnd"></ion-range>
       </div>
     </swiper-slide>
   </swiper-container>

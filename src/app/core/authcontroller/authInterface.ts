@@ -23,6 +23,10 @@ export interface User{
   otpExpireAt?: string;
 }
 
+export interface Followers{
+  followerId:  string;
+  followingId: string;
+}
 // Login Data...
 export interface LoginResponse {
   message: string;

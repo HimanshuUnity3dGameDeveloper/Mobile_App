@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, ViewChildren, QueryList, ElementRef } from '@angular/core';
-import { CommentResponse, User } from 'src/app/core/authcontroller/authInterface';
-import { IonModal, ToastController } from '@ionic/angular';
+import { CommentResponse, Followers, User } from 'src/app/core/authcontroller/authInterface';
+import { ActionSheetController, AlertController, IonModal, ToastController } from '@ionic/angular';
 import { EMPTY, forkJoin, switchMap, tap } from 'rxjs';
 import { PostService } from 'src/app/home/other-features/post/Post-service';
 import { ProfileService } from 'src/app/home/features/profile/profile-service';
@@ -42,9 +42,10 @@ export class FeedsPage implements OnInit{
   // List / Array / Collection....
   postList: any[] = [];
   likedByUsers: any[] = [];
-  selfStory:any [] = [];
   highlights: any[] = [];
+  showHighLight: any[] = [];
   commentList: any[] = [];
+  followList: any[] = [];
 
   constructor(
     private readonly postServe: PostService,
@@ -52,7 +53,8 @@ export class FeedsPage implements OnInit{
     private readonly profileServe: ProfileService,
     private readonly authServe: AuthService,
     private readonly feedServe: FeedService,
-    private readonly toastController: ToastController
+    private readonly toastController: ToastController,
+    private readonly actionSheetCtrl: ActionSheetController
   ) { }
 
   ngOnInit() {
@@ -69,14 +71,15 @@ export class FeedsPage implements OnInit{
     {
       this.loadUserProfile();
       this.loadPost();
+      this.updateFollower();
 
       this.postServe.loadAllStory().subscribe({
         next: ((story: any)=>{
-          const storyList: any[] = story;
-          this.selfStory = storyList.find(item => item.author?.userId === this.user?._id);
-          if(this.selfStory){
-            this.isActiveStory =true;
-          }
+          const storyList = [...story];
+          
+        console.log(story);
+          this.isActiveStory = storyList.find(item => item.author?.userId === this.user?._id);
+          
           this.highlights = storyList.filter(item => item.author?.userId !== this.user?._id);
         })
       });
@@ -273,10 +276,93 @@ export class FeedsPage implements OnInit{
   //#endregion
   
   //#region STORY Panel...
-  openStoryPanel(){
-    this.isStoryModalOpen = true;
+  openSelfStory(id: any){
+    if(!this.isActiveStory){
+      return;
+    }
+    else{
+      this.isStoryModalOpen = true;
+      this.loadStory(id);
+    }
   }
+
+  openStoryPanel(id: any){
+    if(!this.highlights)
+    { 
+      return;
+    }
+    else{
+      this.isStoryModalOpen = true;
+      this.loadStory(id);
+    }
+  }
+
+  loadStory(id: any){
+    this.postServe.loadAllStory().subscribe({
+      next: ((storys: any) =>{
+        const allStory = [...storys];
+        this.showHighLight = allStory.filter(item => item.author?.userId === id);
+      })
+    })
+  }
+
+  async otherStoryController(){
+    const ActionSheet = await this.actionSheetCtrl.create({
+      buttons: [
+        {
+          text: 'Report',
+        },
+        {
+          text: 'Mute',
+        },
+      ],
+    });
+    await ActionSheet.present();
+  }
+  
   //#endregion
+  
+  //#region Follower...
+
+  onClickFollow(item: any){
+
+    const otherUserID = item.author?.userId;
+
+        console.log(otherUserID);
+    const payLoad: Followers = {
+      followerId: this.user?._id ?? '',
+      followingId: otherUserID
+    }
+
+    this.profileServe.createNewFollower(payLoad).subscribe({
+      next:(res=>{
+        console.log(res);
+        this.updateFollower();
+      }),
+      error(er){
+        console.log(er);
+      }
+    })
+  }
+
+  updateFollower(){
+    this.profileServe.callAllFollowers().subscribe({
+      next: ((result: any)=>{
+        this.followList = [...result];
+      }),
+      error(err) {
+        console.log(err);
+      }
+    });
+  }
+
+  isFollowing(id?: string): boolean{
+    const havefollow = this.followList.some(item => item.followingId === id || item.followerId === this.user?._id);
+    return havefollow;
+  }
+
+  //#endregion
+
   toggleGlobalMute(): void {
     
     this.isPlayingPreview = !this.isPlayingPreview;

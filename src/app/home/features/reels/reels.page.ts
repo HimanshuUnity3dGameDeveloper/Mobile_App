@@ -58,6 +58,10 @@ export class ReelsPage implements OnInit {
   isLikesModalOpen = false;
   isCommitModalOpen = false;
   
+  currentTime = 0;
+  duration = 0;
+  isScrubbing = false;
+
   commentPortal={message:''};
   avatarUrl?: string = '';
   
@@ -71,7 +75,7 @@ export class ReelsPage implements OnInit {
     private readonly reelServe: ReelService,
     private readonly profileServe: ProfileService,
     private readonly authService: AuthService,
-        private readonly feedServe: FeedService
+    private readonly feedServe: FeedService
   ){}
   ngOnInit(): void {
 
@@ -135,12 +139,28 @@ export class ReelsPage implements OnInit {
       const audio = playerRef.nativeElement;
       if (index === indexNum) {
         audio.currentTime = 0;
+        this.duration = audio.duration;
+        console.log(this.duration);
         audio.play().catch(err => console.warn('Audio play prevented:', err));
 
       } else {
         audio.pause();      
       }
     });
+  }
+
+  onDragStart() {
+    this.isScrubbing = true;
+  }
+
+  onSliderChange(event: any) {
+    const newValue = event.detail.value;
+    this.currentTime = newValue;
+  }
+
+  // Triggered when the user lets go of the slider
+  onDragEnd() {
+    this.isScrubbing = false;
   }
 
   // In your component.ts

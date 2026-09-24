@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { User } from 'src/app/core/authcontroller/authInterface';
+import { Followers, User } from 'src/app/core/authcontroller/authInterface';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
@@ -85,5 +85,20 @@ export class ProfileService {
   //4. Check field Exits..
   checkFieldExist(){
     return this.http.get(`${environment.apiUrl}/auth`);
+  }
+
+  // 5. Create Follow....
+  createNewFollower(data: any):Observable<Followers>{
+    return this.http.post<Followers>(`${environment.apiUrl}/follow`,data);
+  }
+
+  // 6. Remove follower...
+  removeFollower(id: string){
+    return this.http.delete(`${environment.apiUrl}/follow/${id}/delete`)
+  }
+
+  // 7.Get Follow list..
+  callAllFollowers(){
+    return this.http.get(`${environment.apiUrl}/follow`);
   }
 }
