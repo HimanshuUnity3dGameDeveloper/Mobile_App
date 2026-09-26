@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { ProfileService } from 'src/app/home/features/profile/profile-service';
 import { ChatService } from 'src/app/home/features/chatbox/chat-service';
+import { Followers, User } from 'src/app/core/authcontroller/authInterface';
+import { forkJoin } from 'rxjs';
+import { AuthService } from 'src/app/core/authcontroller/auth-service';
 
 interface FollowList{
   _id: string;
@@ -19,18 +22,16 @@ interface FollowList{
 
 export class ChatboxPage implements OnInit {
   
+  user: User | null = null;
   avatarUrl?: string = '';
   selectedTag: string = 'Primary';
   isSeen: boolean = false;
 
   tags: string[] = ['Primary', 'Requests', 'General'];
 
-  follows: FollowList[] = [
-    {_id:'1', username:'@amam.rock', fullname:'Aman Sharma', imgUrl:'assets/images/rock.avif', status:'follow'},
-    {_id:'2', username:'@ayushi.cuteii', fullname:'Ayushi Singh', imgUrl:'assets/images/barbidoll.jpg', status:'follow'},
-    {_id:'2', username:'@rishu.raj', fullname:'Rishav Raj', imgUrl:'assets/images/Cutipie.jpg', status:'follow back'},
-    {_id:'2', username:'@bhim.kumar', fullname:'Bhim Kumar', imgUrl:'assets/images/Magal.avif', status:'follow back'}
-  ]
+  follows: User[] = []
+  followerList: any[] = [];
+  followingList: any[] =[];
 
   onlineFriend = [
     {_id:'1', fullname:'Luna Art', imgUrl:'assets/images/luna_art.jpg', status:'false'},
@@ -39,6 +40,7 @@ export class ChatboxPage implements OnInit {
   ]
   
   constructor(
+    private readonly authServe: AuthService,
     private readonly profileServe: ProfileService,
     private readonly chatServe: ChatService
   ) { }
@@ -46,6 +48,7 @@ export class ChatboxPage implements OnInit {
   ngOnInit() { 
     this.profileServe.loadUserData().subscribe({
       next: (userData) => {
+        this.user = userData;
         this.avatarUrl = userData.avatarUrl?.trim();       
       },
       error: (err) => {
@@ -53,21 +56,128 @@ export class ChatboxPage implements OnInit {
       },
     });
 
+    this.updateFollowList();
+    this.callAllUsers();
+
     this.isSeen = false;
   }
 
-  getUserAvatar(): string{
+  //#region Following/Follower Content....
+  onClickFollow(item: any){
+    const otherUserID = item?._id;
 
-      if (this.avatarUrl) {
-      // Return absolute URLs directly
-      if (this.avatarUrl.startsWith('http://') || this.avatarUrl.startsWith('https://')) {
-        return this.avatarUrl;
-      }
+    const payLoad: Followers = {
+      followerId: this.user?._id??'',
+      followingId: otherUserID
     }
 
-    // Default fallback placeholder
-    return 'assets/images/default-avatar.png';
+    this.profileServe.createNewFollower(payLoad).subscribe({
+      next:()=>{
+        this.updateFollowList();
+        this.callAllUsers();
+      },
+      error(er){
+        console.log(er);
+      }
+    })
   }
+
+  updateFollowList(event?: any){
+    this.profileServe.callAllFollowers().subscribe({
+      next: ((response)=>{
+        const list = Array.isArray(response) ? response : [];
+
+        // 1. Separate the follower and following ids..
+        this.followerList = list.filter(item => item.followerId === this.user?._id);       //Followers means i follow the preson..
+        this.followingList = list.filter(item => item.followingId === this.user?._id);     //Following means who follow me..
+
+        this.callFollowerModel();
+        this.callFollowingModel();
+        if (event) {
+          event.target.complete();
+        }
+      }),
+      error(er){
+        console.log(er);
+        if (event) {
+          event.target.complete();
+        }
+      }
+    });
+  }
+
+  callFollowerModel(){
+    
+    // 1. Map all items into an array of Observables (do NOT subscribe inside map)
+    const userRequests$ = this.followingList.map(item => 
+      this.profileServe.loadUserDataById(item.followerId)
+    );
+
+    // 2. Pass the entire array into forkJoin so all requests run in parallel
+    if (userRequests$.length > 0) {
+      forkJoin(userRequests$).subscribe({
+        next: (usersData: any[]) => {
+          // usersData contains user objects in the exact order of userRequests$
+          this.followingList = this.followingList.map((list, index) => ({
+            ...list,
+            followerId: usersData[index] // Match each resolved user by index
+          }));
+
+          console.log('Updated list:', this.followingList);
+        },
+        error: (err) => {
+          console.error('Error fetching user data:', err);
+        }
+      });
+    }
+    
+  }
+
+  callFollowingModel(){
+    
+    // 1. Map all items into an array of Observables (do NOT subscribe inside map)
+    const userRequests$ = this.followerList.map(item => 
+      this.profileServe.loadUserDataById(item.followingId)
+    );
+
+    // 2. Pass the entire array into forkJoin so all requests run in parallel
+    if (userRequests$.length > 0) {
+      forkJoin(userRequests$).subscribe({
+        next: (usersData: any[]) => {
+          // usersData contains user objects in the exact order of userRequests$
+          this.followerList = this.followerList.map((list, index) => ({
+            ...list,
+            followingId: usersData[index] // Match each resolved user by index
+          }));
+
+          console.log('Updated list:', this.followerList);
+        },
+        error: (err) => {
+          console.error('Error fetching user data:', err);
+        }
+      });
+    }
+
+  }
+
+  callAllUsers(){
+    this.authServe.allUsers().subscribe({
+      next:(data: User[])=>{
+        const list = data;
+        const request = new Set(this.followerList.map(item=> item.followingId));
+
+        this.follows = list.filter(item=>item._id !== this.user?._id && !request.has(item._id));
+      }
+    })
+  }
+
+  isFollower(item: any): boolean{
+    const id = item._id;
+    return this.followingList.some((follow) =>
+      follow.followerId === id || follow.followerId?._id === id
+    );
+  }
+  //#endregion
 
   selectTag(tag: string) {
     this.selectedTag = tag;

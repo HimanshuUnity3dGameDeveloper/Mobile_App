@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, catchError, finalize, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, finalize, map, Observable, tap, throwError } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { LoginResponse, SessionState, User } from './authInterface';
 
@@ -100,4 +100,32 @@ export class AuthService {
     });
   }
 
+  // 10. Get All users
+  allUsers(): Observable<User[]> {
+    const backendUrl = environment.apiUrl.replace(/\/auth\/?$/, '') || 'http://localhost:3000';
+
+    return this.http.get<User[]>(`${environment.apiUrl}/auth`).pipe(
+      map((users: User[]) => {
+        if (!Array.isArray(users)) return [];
+
+        return users.map((user) => {
+          const avatar = user.avatarUrl?.trim();
+          let formattedAvatar = 'assets/images/default-avatar.png';
+
+          if (avatar) {
+            if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+              formattedAvatar = avatar;
+            } else {
+              formattedAvatar = `${backendUrl}${avatar.startsWith('/') ? '' : '/'}${avatar}`;
+            }
+          }
+
+          return {
+            ...user,
+            avatarUrl: formattedAvatar
+          };
+        });
+      })
+    );
+  }
 }
