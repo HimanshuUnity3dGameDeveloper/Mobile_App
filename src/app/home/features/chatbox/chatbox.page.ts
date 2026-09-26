@@ -57,7 +57,6 @@ export class ChatboxPage implements OnInit {
     });
 
     this.updateFollowList();
-    this.callAllUsers();
 
     this.isSeen = false;
   }
@@ -74,7 +73,6 @@ export class ChatboxPage implements OnInit {
     this.profileServe.createNewFollower(payLoad).subscribe({
       next:()=>{
         this.updateFollowList();
-        this.callAllUsers();
       },
       error(er){
         console.log(er);
@@ -87,12 +85,29 @@ export class ChatboxPage implements OnInit {
       next: ((response)=>{
         const list = Array.isArray(response) ? response : [];
 
-        // 1. Separate the follower and following ids..
-        this.followerList = list.filter(item => item.followerId === this.user?._id);       //Followers means i follow the preson..
-        this.followingList = list.filter(item => item.followingId === this.user?._id);     //Following means who follow me..
+        // Step-1. Get the list of user whom i followed
+        const following = list.filter(item => item.followerId === this.user?._id);
 
-        this.callFollowerModel();
-        this.callFollowingModel();
+        // Step-2. Get the list of user the follow my account..
+        const follower = list.filter(item => item.followingId === this.user?._id);
+
+        this.authServe.allUsers().subscribe({
+          next:(data: User[])=>{
+            const list = data;
+
+            // Step-3. Fetch the user whom i followed..
+            const request1 = new Set(following.map(item => item.followingId));
+            this.followingList = list.filter(item => request1.has(item._id));
+
+            // Step-4. Fetch the user that following my account..
+            const request2 = new Set(follower.map(item => item.followerId));
+            this.followerList = list.filter(item => request2.has(item._id));
+        
+            // Step-5. Filter only those user who didn't in my following list..
+            this.follows = list.filter(item=>item._id !== this.user?._id && !request1.has(item._id));
+          }
+        });
+
         if (event) {
           event.target.complete();
         }
@@ -106,75 +121,9 @@ export class ChatboxPage implements OnInit {
     });
   }
 
-  callFollowerModel(){
-    
-    // 1. Map all items into an array of Observables (do NOT subscribe inside map)
-    const userRequests$ = this.followingList.map(item => 
-      this.profileServe.loadUserDataById(item.followerId)
-    );
-
-    // 2. Pass the entire array into forkJoin so all requests run in parallel
-    if (userRequests$.length > 0) {
-      forkJoin(userRequests$).subscribe({
-        next: (usersData: any[]) => {
-          // usersData contains user objects in the exact order of userRequests$
-          this.followingList = this.followingList.map((list, index) => ({
-            ...list,
-            followerId: usersData[index] // Match each resolved user by index
-          }));
-
-          console.log('Updated list:', this.followingList);
-        },
-        error: (err) => {
-          console.error('Error fetching user data:', err);
-        }
-      });
-    }
-    
-  }
-
-  callFollowingModel(){
-    
-    // 1. Map all items into an array of Observables (do NOT subscribe inside map)
-    const userRequests$ = this.followerList.map(item => 
-      this.profileServe.loadUserDataById(item.followingId)
-    );
-
-    // 2. Pass the entire array into forkJoin so all requests run in parallel
-    if (userRequests$.length > 0) {
-      forkJoin(userRequests$).subscribe({
-        next: (usersData: any[]) => {
-          // usersData contains user objects in the exact order of userRequests$
-          this.followerList = this.followerList.map((list, index) => ({
-            ...list,
-            followingId: usersData[index] // Match each resolved user by index
-          }));
-
-          console.log('Updated list:', this.followerList);
-        },
-        error: (err) => {
-          console.error('Error fetching user data:', err);
-        }
-      });
-    }
-
-  }
-
-  callAllUsers(){
-    this.authServe.allUsers().subscribe({
-      next:(data: User[])=>{
-        const list = data;
-        const request = new Set(this.followerList.map(item=> item.followingId));
-
-        this.follows = list.filter(item=>item._id !== this.user?._id && !request.has(item._id));
-      }
-    })
-  }
-
   isFollower(item: any): boolean{
     const id = item._id;
-    return this.followingList.some((follow) =>
-      follow.followerId === id || follow.followerId?._id === id
+    return this.followerList.some((follow) => follow._id === id
     );
   }
   //#endregion

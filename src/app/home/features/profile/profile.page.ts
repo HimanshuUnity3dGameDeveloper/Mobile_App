@@ -308,7 +308,7 @@ export class ProfilePage implements OnInit {
 
     this.profileServe.createNewFollower(payLoad).subscribe({
       next:()=>{
-        this.isFollowerModel = false;
+        this.updateFollowList();
       },
       error(er){
         console.log(er);
@@ -321,16 +321,30 @@ export class ProfilePage implements OnInit {
       next: ((response)=>{
         this.followList = Array.isArray(response) ? response : [];
 
-        // 1. Separate the follower and following ids..
-        this.followerList = this.followList.filter(item => item.followerId === this.user?._id);       //Followers means i follow the preson..
-        this.followingList = this.followList.filter(item => item.followingId === this.user?._id);     //Following means who follow me..
+        // Step-1. Get the list of user whom i followed
+        const following = this.followList.filter(item => item.followerId === this.user?._id);
 
-        // 2. Set the count by lenghts...
-        this.followerNum = this.followingList.length;
-        this.followingNum = this.followerList.length;
+        // Step-2. Get the list of user the follow my account..
+        const follower = this.followList.filter(item => item.followingId === this.user?._id);
 
-        this.callFollowerModel();
-        this.callFollowingModel();
+        // Step-3. Set the count by lenghts...
+        this.followerNum = follower.length;
+        this.followingNum = following.length;
+
+        this.authServe.allUsers().subscribe({
+          next:(data: User[])=>{
+            const list = data;
+
+            // Step-4. Fetch the user whom i followed..
+            const request1 = new Set(following.map(item => item.followingId));
+            this.followingList = list.filter(item => request1.has(item._id));
+
+            // Step-5. Fetch the user that following my account..
+            const request2 = new Set(follower.map(item => item.followerId));
+            this.followerList = list.filter(item => request2.has(item._id));
+          }
+        });
+
         if (event) {
           event.target.complete();
         }
@@ -342,60 +356,6 @@ export class ProfilePage implements OnInit {
         }
       }
     });
-  }
-
-  callFollowerModel(){
-    
-    // 1. Map all items into an array of Observables (do NOT subscribe inside map)
-    const userRequests$ = this.followingList.map(item => 
-      this.profileServe.loadUserDataById(item.followerId)
-    );
-
-    // 2. Pass the entire array into forkJoin so all requests run in parallel
-    if (userRequests$.length > 0) {
-      forkJoin(userRequests$).subscribe({
-        next: (usersData: any[]) => {
-          // usersData contains user objects in the exact order of userRequests$
-          this.followingList = this.followingList.map((list, index) => ({
-            ...list,
-            followerId: usersData[index] // Match each resolved user by index
-          }));
-
-          console.log('Updated list:', this.followingList);
-        },
-        error: (err) => {
-          console.error('Error fetching user data:', err);
-        }
-      });
-    }
-    
-  }
-
-  callFollowingModel(){
-    
-    // 1. Map all items into an array of Observables (do NOT subscribe inside map)
-    const userRequests$ = this.followerList.map(item => 
-      this.profileServe.loadUserDataById(item.followingId)
-    );
-
-    // 2. Pass the entire array into forkJoin so all requests run in parallel
-    if (userRequests$.length > 0) {
-      forkJoin(userRequests$).subscribe({
-        next: (usersData: any[]) => {
-          // usersData contains user objects in the exact order of userRequests$
-          this.followerList = this.followerList.map((list, index) => ({
-            ...list,
-            followingId: usersData[index] // Match each resolved user by index
-          }));
-
-          console.log('Updated list:', this.followerList);
-        },
-        error: (err) => {
-          console.error('Error fetching user data:', err);
-        }
-      });
-    }
-
   }
 
   isFollowing(id: string):boolean{

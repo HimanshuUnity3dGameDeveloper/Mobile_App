@@ -28,14 +28,14 @@
         <span>Your note</span>
       </div>
       
-      <div class="story-context" *ngFor="let item of followerList">
+      <div class="story-context" *ngFor="let item of followingList">
         <div class="online-relative">
           <ion-avatar class="person">
-            <ion-img [src]="item.followingId?.avatarUrl" alt="User Avatar"></ion-img>
+            <ion-img [src]="item.avatarUrl" alt="User Avatar"></ion-img>
           </ion-avatar>
           <ion-icon class="story-add-absolute" name="online"></ion-icon>
         </div>
-        <span>{{item.followingId?.fullname}}</span>
+        <span>{{item?.fullname}}</span>
       </div>
     </section>
 
@@ -156,7 +156,6 @@
           }@else{
             <ion-button shape="round" size="small" fill="clear" (click)="onClickFollow(item)">Follow</ion-button>
           }
-          <ion-icon name="close-outline"></ion-icon>
         </div>
       </div>
     </section>

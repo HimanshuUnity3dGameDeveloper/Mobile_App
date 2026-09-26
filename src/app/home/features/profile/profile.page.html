@@ -345,14 +345,14 @@
         </ion-toolbar>
       </ion-header>
       <ion-content class="follow-list card-board">
-        <div class="person-list" *ngFor="let item of followingList">
+        <div class="person-list" *ngFor="let item of followerList">
         <div class="avatar">
           <ion-avatar>           
-            <ion-img [src]="item.followerId?.avatarUrl" alt="User Avatar"></ion-img>
+            <ion-img [src]="item.avatarUrl" alt="User Avatar"></ion-img>
           </ion-avatar>
           <div class="title">
-            <h2>{{item.followerId?.username}}</h2>
-            <span>{{item.followerId?.fullname}}</span>
+            <h2>{{item?.username}}</h2>
+            <span>{{item?.fullname}}</span>
           </div>
         </div>
         <div class="tabs">
@@ -382,14 +382,14 @@
         </ion-toolbar>
       </ion-header>
       <ion-content class="follow-list card-board">
-        <div class="person-list" *ngFor="let item of followerList">
+        <div class="person-list" *ngFor="let item of followingList">
         <div class="avatar">
           <ion-avatar>           
-            <ion-img [src]="item.followingId?.avatarUrl" alt="User Avatar"></ion-img>
+            <ion-img [src]="item.avatarUrl" alt="User Avatar"></ion-img>
           </ion-avatar>
           <div class="title">
-            <h2>{{item.followingId?.username}}</h2>
-            <span>{{item.followingId?.fullname}}</span>
+            <h2>{{item?.username}}</h2>
+            <span>{{item?.fullname}}</span>
           </div>
         </div>
         <div class="tabs">
