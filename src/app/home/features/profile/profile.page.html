@@ -41,11 +41,11 @@
               <p>{{postNumber}}</p>
               <p>posts</p>
             </div>
-            <div class="list">
+            <div class="list" (click)="isFollowerModel = true">
               <p>{{followerNum}}</p>
               <p>followers</p>
             </div>
-            <div class="list">
+            <div class="list" (click)="isFollowingModel = true">
               <p>{{followingNum}}</p>
               <p>following</p>
             </div>
@@ -327,6 +327,76 @@
             </div> -->
           </article>
         </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- FollowerList Model -->
+  <ion-modal [isOpen]="isFollowerModel" class="follower-class">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar class="header-class">
+          <ion-button slot="start" shape="round" fill="clear" (click)="isFollowerModel = false">
+            <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+          </ion-button>
+          <ion-button fill="clear">
+            <ion-label>{{user?.username}}</ion-label>
+          </ion-button>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="follow-list card-board">
+        <div class="person-list" *ngFor="let item of followingList">
+        <div class="avatar">
+          <ion-avatar>           
+            <ion-img [src]="item.followerId?.avatarUrl" alt="User Avatar"></ion-img>
+          </ion-avatar>
+          <div class="title">
+            <h2>{{item.followerId?.username}}</h2>
+            <span>{{item.followerId?.fullname}}</span>
+          </div>
+        </div>
+        <div class="tabs">
+          @if(!isFollowing(item?._id)){
+            <ion-button shape="round" size="small" fill="clear" (click)="onClickFollow(item)">follow back</ion-button>
+          }@else{
+            <ion-button shape="round" size="small" fill="clear">Message</ion-button>
+          }
+          <ion-icon name="close-outline" (click)="onClickRemove(item)"></ion-icon>
+        </div>
+      </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- FollowingList Model -->
+  <ion-modal [isOpen]="isFollowingModel" class="follower-class">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar class="header-class">
+          <ion-button slot="start" shape="round" fill="clear" (click)="isFollowingModel = false">
+            <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+          </ion-button>
+          <ion-button fill="clear">
+            <ion-label>{{user?.username}}</ion-label>
+          </ion-button>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="follow-list card-board">
+        <div class="person-list" *ngFor="let item of followerList">
+        <div class="avatar">
+          <ion-avatar>           
+            <ion-img [src]="item.followingId?.avatarUrl" alt="User Avatar"></ion-img>
+          </ion-avatar>
+          <div class="title">
+            <h2>{{item.followingId?.username}}</h2>
+            <span>{{item.followingId?.fullname}}</span>
+          </div>
+        </div>
+        <div class="tabs">
+          <ion-button shape="round" size="small" fill="clear">Message</ion-button>
+          <ion-icon name="ellipsis-vertical-outline" (click)="presentActionSheet(item)"></ion-icon>
+        </div>
+      </div>
       </ion-content>
     </ng-template>
   </ion-modal>

@@ -4,7 +4,8 @@ import { AuthService } from 'src/app/core/authcontroller/auth-service';
 import { ProfileService } from './profile-service';
 import { PostService } from 'src/app/home/other-features/post/Post-service';
 import { ActionSheetController, NavController, ToastController } from '@ionic/angular';
-import { ContentAuthor, User } from 'src/app/core/authcontroller/authInterface';
+import { ContentAuthor, Followers, User } from 'src/app/core/authcontroller/authInterface';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-profile',
@@ -37,8 +38,9 @@ export class ProfilePage implements OnInit {
   followingNum: number = 0;
   //#endregion
 
-  isFollowing: boolean = false;
   isEditProfile: boolean = false;
+  isFollowerModel: boolean = false;
+  isFollowingModel: boolean = false;
   isTaken: boolean | null = null;
 
   isGrid = true;
@@ -54,6 +56,7 @@ export class ProfilePage implements OnInit {
   checkUser: any[] = [];
   // Keep track of original values to avoid redundant updates/checks
   private originalUserData: any = {};
+  private followList: any[] = [];
 
   constructor(
     private readonly actionSheetCtrl: ActionSheetController,
@@ -122,10 +125,12 @@ export class ProfilePage implements OnInit {
   
   handleRefresh(event: any){
     this.loadUserProfile(event);
+    this.updatePost(event);
+    this.updateFollowList(event);
   }
 
   // 2. UPDATE POST..
-  updatePost(){
+  updatePost(event?: any){
     
     this.postServe.loadPostData().subscribe({
       next: (userData: any) => {
@@ -141,10 +146,15 @@ export class ProfilePage implements OnInit {
         }
         
         this.postNumber = this.posts.length;
-        
+        if (event) {
+          event.target.complete();
+        }
       },
       error: (err) => {
         console.error('Failed to load user profile:', err);
+        if (event) {
+          event.target.complete();
+        }
       }
     });
   }
@@ -182,46 +192,6 @@ export class ProfilePage implements OnInit {
     console.log(this.showPost);
   }
   //#endregion
-
-  // 5. FOLLOWING PEOPLES
-  toggleLikes(item: any){  
-    const userId = item._id;
-    if (!userId) {return};
-  
-    this.postServe.updateLikes(userId).subscribe({
-      next: (updatedPost: any) => {
-        item.likesCount = updatedPost.likesCount;
-      },
-      error: (err: any) => {
-        console.error('DB Update failed:', err);
-      }
-    });
-  }
-
-  goToEditProfile() {
-    this.isEditProfile = !this.isEditProfile
-  }
-
-  onLogout(){
-    // Remove focus from any active button to prevent accessibility focus warnings
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-
-    this.authServe.logout();
-  }
-
-  async presentSuccessToast(messageText: string) {
-    const toast = await this.toastController.create({
-      message: messageText,
-      duration: 2500,
-      position: 'bottom',
-      color: 'success',
-      icon: 'checkmark-circle-outline', // Optional icon
-    });
-
-    await toast.present();
-  }
 
   //#region  UPLOAD PROFILE PHOTO...
   async pickPhotoFromGallery(){
@@ -289,27 +259,6 @@ export class ProfilePage implements OnInit {
   //#endregion
 
   //#region EDIT PROFILE..
-
-  // onFieldBlur( value?: string): void {
-  //   if (!value) return;
-
-  //   const trimmedValue = value.trim();
-
-  //   if(trimmedValue === this.originalUserData.username){
-  //     this.isTaken = null;
-  //     return;
-  //   }
-    
-  //   this.profileServe.checkFieldExist().subscribe({
-  //       next: (data: any) => {
-  //         this.checkUser = data;
-  //         this.isTaken = this.checkUser.some(item => item.username === trimmedValue)
-  //       },
-  //       error: (err) => console.error('Duplicate check failed', err)
-  //     });
-  // }
-
-  
   editandupdateprofile(){
     if(!this.currentUserId) return;
     
@@ -339,61 +288,194 @@ export class ProfilePage implements OnInit {
       }
     });
   }
-  //#endregion
 
-  //#region Gender...
   onSelectGender(value: string) {
     if(this.user) this.user.gender = value;
   }
   //#endregion
-  
-  //#region following...
 
-  updateFollowList(){
+  //#region following...
+  onClickFollow(item: any){
+    const otherUserID = item?._id;
+
+    const payLoad: Followers = {
+      followerId: this.currentUserId,
+      followingId: otherUserID
+    }
+
+    this.profileServe.createNewFollower(payLoad).subscribe({
+      next:()=>{
+        this.isFollowerModel = false;
+      },
+      error(er){
+        console.log(er);
+      }
+    })
+  }
+
+  updateFollowList(event?: any){
     this.profileServe.callAllFollowers().subscribe({
-      next: ((response: any)=>{
-        const followList = [...response];
-        
+      next: ((response)=>{
+        this.followList = Array.isArray(response) ? response : [];
+
         // 1. Separate the follower and following ids..
-        const follower = followList.filter(item => item.followerId === this.user?._id);
-        const following = followList.filter(item => item.followingId === this.user?._id);
+        this.followerList = this.followList.filter(item => item.followerId === this.user?._id);       //Followers means i follow the preson..
+        this.followingList = this.followList.filter(item => item.followingId === this.user?._id);     //Following means who follow me..
 
         // 2. Set the count by lenghts...
-        this.followerNum = follower.length;
-        this.followingNum = following.length;
+        this.followerNum = this.followingList.length;
+        this.followingNum = this.followerList.length;
 
-        // 3. Extract actual userid..
-        const followerUserId = followList.map(item => item.followerId);
-        const followingUserId = followList.map(item => item.followingId);
-
-        // 3. Load complete user profiles (Batch fetch or single request)
-        if(followerUserId.length){
-          this.loadUserData(followerUserId, 'follower');
-        }else{
-          this.loadUserData(followingUserId, 'following');
+        this.callFollowerModel();
+        this.callFollowingModel();
+        if (event) {
+          event.target.complete();
         }
       }),
       error(er){
         console.log(er);
+        if (event) {
+          event.target.complete();
+        }
       }
     });
   }
 
-  private loadUserData(userIds: string[], type: 'follower' | 'following'){
-    userIds.forEach(userId => {
-      this.profileServe.loadUserDataById(userId).subscribe({
-        next: (response: any) => {
-          if(type === 'follower') {
-            this.followerList = response;
-          } else {
-            this.followingList = response;
-          }
+  callFollowerModel(){
+    
+    // 1. Map all items into an array of Observables (do NOT subscribe inside map)
+    const userRequests$ = this.followingList.map(item => 
+      this.profileServe.loadUserDataById(item.followerId)
+    );
+
+    // 2. Pass the entire array into forkJoin so all requests run in parallel
+    if (userRequests$.length > 0) {
+      forkJoin(userRequests$).subscribe({
+        next: (usersData: any[]) => {
+          // usersData contains user objects in the exact order of userRequests$
+          this.followingList = this.followingList.map((list, index) => ({
+            ...list,
+            followerId: usersData[index] // Match each resolved user by index
+          }));
+
+          console.log('Updated list:', this.followingList);
         },
-        error: er => {
-          console.log(er);
+        error: (err) => {
+          console.error('Error fetching user data:', err);
         }
       });
-    });
+    }
+    
+  }
+
+  callFollowingModel(){
+    
+    // 1. Map all items into an array of Observables (do NOT subscribe inside map)
+    const userRequests$ = this.followerList.map(item => 
+      this.profileServe.loadUserDataById(item.followingId)
+    );
+
+    // 2. Pass the entire array into forkJoin so all requests run in parallel
+    if (userRequests$.length > 0) {
+      forkJoin(userRequests$).subscribe({
+        next: (usersData: any[]) => {
+          // usersData contains user objects in the exact order of userRequests$
+          this.followerList = this.followerList.map((list, index) => ({
+            ...list,
+            followingId: usersData[index] // Match each resolved user by index
+          }));
+
+          console.log('Updated list:', this.followerList);
+        },
+        error: (err) => {
+          console.error('Error fetching user data:', err);
+        }
+      });
+    }
+
+  }
+
+  isFollowing(id: string):boolean{
+    const hasFollowBack = this.followingList.some(item => item._id === id);
+    return hasFollowBack;
+  }
+
+  onClickRemove(item: any){
+    this.profileServe.removeFollower(item._id).subscribe({
+      next: ()=>{
+        this.isFollowerModel = false;
+        this.updateFollowList();
+      },
+      error(err) {
+        console.log(err);
+      },
+    })
   }
   //#endregion
+
+  toggleLikes(item: any){  
+    const userId = item._id;
+    if (!userId) {return};
+  
+    this.postServe.updateLikes(userId).subscribe({
+      next: (updatedPost: any) => {
+        item.likesCount = updatedPost.likesCount;
+      },
+      error: (err: any) => {
+        console.error('DB Update failed:', err);
+      }
+    });
+  }
+
+  goToEditProfile() {
+    this.isEditProfile = !this.isEditProfile
+  }
+
+  onLogout(){
+    // Remove focus from any active button to prevent accessibility focus warnings
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    this.authServe.logout();
+  }
+
+  async presentSuccessToast(messageText: string) {
+    const toast = await this.toastController.create({
+      message: messageText,
+      duration: 2500,
+      position: 'bottom',
+      color: 'success',
+      icon: 'checkmark-circle-outline', // Optional icon
+    });
+
+    await toast.present();
+  }
+
+  async presentActionSheet(item: any) {
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: item.followingId?.username,
+      buttons: [
+        {
+          text: 'Unfollow',
+          handler: () => { this.onClickRemove(item) }
+        },
+        {
+          text: 'Mute',
+          handler: () => { /* Handle mute */ }
+        },
+        {
+          text: 'Report',
+          role: 'destructive',
+          handler: () => { /* Handle report */ }
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        }
+      ]
+    });
+
+    await actionSheet.present();
+  }
 }

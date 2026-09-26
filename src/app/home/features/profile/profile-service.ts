@@ -47,7 +47,7 @@ export class ProfileService {
   }
 
   // 2. FETCH USER BY ID.....
-  loadUserDataById(userId: string) {
+  loadUserDataById(userId: string): Observable<any>{
     return this.http.get<User>(`${environment.apiUrl}/auth/${userId}`).pipe(
       map((user) => {
         if (user) {

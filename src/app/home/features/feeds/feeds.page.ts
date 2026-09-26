@@ -77,7 +77,6 @@ export class FeedsPage implements OnInit{
         next: ((story: any)=>{
           const storyList = [...story];
           
-        console.log(story);
           this.isActiveStory = storyList.find(item => item.author?.userId === this.user?._id);
           
           this.highlights = storyList.filter(item => item.author?.userId !== this.user?._id);
@@ -328,17 +327,15 @@ export class FeedsPage implements OnInit{
 
     const otherUserID = item.author?.userId;
 
-        console.log(otherUserID);
     const payLoad: Followers = {
       followerId: this.user?._id ?? '',
       followingId: otherUserID
     }
 
     this.profileServe.createNewFollower(payLoad).subscribe({
-      next:(res=>{
-        console.log(res);
+      next:()=>{
         this.updateFollower();
-      }),
+      },
       error(er){
         console.log(er);
       }
@@ -347,9 +344,9 @@ export class FeedsPage implements OnInit{
 
   updateFollower(){
     this.profileServe.callAllFollowers().subscribe({
-      next: ((result: any)=>{
+      next: (result: any)=>{
         this.followList = [...result];
-      }),
+      },
       error(err) {
         console.log(err);
       }
@@ -357,8 +354,11 @@ export class FeedsPage implements OnInit{
   }
 
   isFollowing(id?: string): boolean{
-    const havefollow = this.followList.some(item => item.followingId === id || item.followerId === this.user?._id);
-    return havefollow;
+    if(id === this.user?._id){
+      return true;
+    }else{
+      return this.followList.some((item) => item.followerId === this.user?._id && item.followingId === id);
+    }
   }
 
   //#endregion
