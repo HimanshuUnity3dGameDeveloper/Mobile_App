@@ -87,7 +87,10 @@
                   </div>
                 </div>
                 <div>
-                  <ion-button shape="round" size="small" (click)="onClickFollow(feed)">Follow</ion-button>
+                  @if(!isFollowing(feed.author?.userId))
+                  {
+                    <ion-button class="follow-btn" shape="round" size="small" fill="clear" (click)="onClickFollow(feed)">Follow</ion-button>
+                  }
                   <ion-button shape="round" fill="clear" size="small">
                     <ion-icon slot="icon-only" name="ellipsis-horizontal"></ion-icon>
                   </ion-button>
@@ -109,7 +112,7 @@
               <div>
                   @if(!isFollowing(feed.author?.userId))
                   {
-                    <ion-button shape="round" size="small" (click)="onClickFollow(feed)">Follow</ion-button>
+                    <ion-button class="follow-btn" shape="round" size="small" fill="clear" (click)="onClickFollow(feed)">Follow</ion-button>
                   }
                   <ion-button shape="round" fill="clear" size="small">
                     <ion-icon slot="icon-only" name="ellipsis-horizontal"></ion-icon>

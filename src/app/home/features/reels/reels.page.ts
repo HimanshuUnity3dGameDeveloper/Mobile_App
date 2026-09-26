@@ -119,6 +119,7 @@ export class ReelsPage implements OnInit {
 
       if (index === indexNum) {
         video.currentTime = 0;
+        this.duration = video.duration
         video.play().catch(err => console.warn('Video play prevented:', err));
 
         // Update state for active index
@@ -139,28 +140,12 @@ export class ReelsPage implements OnInit {
       const audio = playerRef.nativeElement;
       if (index === indexNum) {
         audio.currentTime = 0;
-        this.duration = audio.duration;
-        console.log(this.duration);
         audio.play().catch(err => console.warn('Audio play prevented:', err));
 
       } else {
         audio.pause();      
       }
     });
-  }
-
-  onDragStart() {
-    this.isScrubbing = true;
-  }
-
-  onSliderChange(event: any) {
-    const newValue = event.detail.value;
-    this.currentTime = newValue;
-  }
-
-  // Triggered when the user lets go of the slider
-  onDragEnd() {
-    this.isScrubbing = false;
   }
 
   // In your component.ts
@@ -177,9 +162,34 @@ export class ReelsPage implements OnInit {
     if (video && video.duration) {
       // Overwrite the static duration string with actual formatted video duration
       if (item.audio) {
-        item.audio.duration = this.formatDuration(video.duration);
+        item.audio.duration = this.formatDuration(video.duration);;
+        console.log(this.formatDuration(video.duration) + "__" + item.audio.duration)
       }
     }
+  }
+
+  onDragStart() {
+    this.isScrubbing = true;
+  }
+  
+  onTimeUpdate(event: Event) {
+    if (!this.isScrubbing) {
+      const video = event.target as HTMLVideoElement;
+      this.currentTime = video.currentTime;
+    }
+  }
+
+  onSliderChange(event: any) {
+    this.currentTime = event.detail.value;
+  }
+
+  // Triggered when the user lets go of the slider
+  onDragEnd(event: Event) {
+    const video = event.target as HTMLVideoElement;
+    if (video) {
+      video.currentTime = this.currentTime;
+    }
+    this.isScrubbing = false;
   }
 
   // Tap video to toggle Play / Pause

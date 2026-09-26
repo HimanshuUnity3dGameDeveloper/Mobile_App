@@ -57,6 +57,7 @@ export class ProfilePage implements OnInit {
   // Keep track of original values to avoid redundant updates/checks
   private originalUserData: any = {};
   private followList: any[] = [];
+  isOnline: boolean = navigator.onLine;
 
   constructor(
     private readonly actionSheetCtrl: ActionSheetController,
@@ -67,6 +68,8 @@ export class ProfilePage implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.isOnline = navigator.onLine;
+    console.log(this.isOnline);
   }
   
   ionViewWillEnter() {
