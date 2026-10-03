@@ -150,7 +150,7 @@ export interface MediaComposerState {
 export interface DirectMessage {
   _id?: string;
   roomId: string;
-  senderId: { _id: string; username: string; avatar?: string; } | string;
+  senderId: ContentAuthor | string;
   text: string;
   messageType?: 'text' | 'image' | 'file';
   mediaUrl?: string;
@@ -159,17 +159,15 @@ export interface DirectMessage {
 }
 
 export interface ChatList{
-   _id?: string;
-  email?: string;
-  phoneNumber?: string;
+  _id?: string;
+  roomId: string;
+  text: string;
+  mediaUrl?: string;
+  readBy?: string[];
+  createdAt?: string;
   username:string;
   fullname:string;
-  pronouns?:string;
-  // Mark missing fields as optional
-  password?: string;
   avatarUrl?: string;
-  bio?: string;
-  createdAt?: Date;
   lastMessage: string;
   lastMessageTime: string | Date;
 }

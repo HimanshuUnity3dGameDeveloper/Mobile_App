@@ -51,19 +51,19 @@
       </div>
 
       <div class="list-msg">
-        <div class="card-board" *ngFor="let person of chatPersonList" (click)="openPrivateChat(person)">
+        <div class="card-board" *ngFor="let person of messages" (click)="openGroupChat(person)">
           <div class="online-relative">
             <ion-avatar class="msg-person">
-              <ion-img [src]="person?.avatarUrl || 'assets/images/default-avatar.png'" alt="User Avatar"></ion-img>
+              <ion-img [src]="getSenderAvatar(person.senderId)" alt="User Avatar"></ion-img>
             </ion-avatar>
             <ion-icon class="story-add-absolute" name="ellipse" color="success"></ion-icon>
           </div>
-          <div class="card-title-msg">
+          <div class="card-title-msg" [class.seen]="!isMessageRead(person)">
             <div class="person-name-time">
-              <span>{{ person?.username }}</span>
-              <h6>{{(person?.lastMessageTime) | timeAgo}}</h6>
+              <span>{{getSenderName(person.senderId)}}</span>
+              <h6>{{(person.createdAt) | timeAgo}}</h6>
             </div>
-            <p>{{person?.lastMessage}}</p>
+            <p>{{person.text}}</p>
           </div>
         </div>
       </div>
@@ -95,64 +95,4 @@
       </div>
     </section>
   </div>
-
-  <ion-modal [isOpen]="isChatModalOpen" (didDismiss)="closeChatModal()">
-    <ng-template>
-      <ion-header>
-        <ion-toolbar color="primary">
-          <ion-title>{{ activeUser?.fullname || 'Private Chat' }}</ion-title>
-          <ion-buttons slot="end">
-            <ion-button (click)="closeChatModal()">Close</ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-
-      <ion-content class="ion-padding">
-        <ion-list lines="none">
-          <div
-            *ngFor="let msg of messages"
-            [class.my-message]="isMyMessage(msg.senderId)"
-            [class.other-message]="!isMyMessage(msg.senderId)"
-            class="message-wrapper"
-          >
-            <!-- Optional Sender Avatar for incoming messages -->
-            <div class="message-bubble">
-              <!-- Sender Name (Shown only for received messages) -->
-              <div class="sender-name" *ngIf="!isMyMessage(msg.senderId)">
-                {{ getSenderName(msg.senderId) }}
-              </div>
-
-              <!-- Render Media (Image) if messageType is image -->
-              <div *ngIf="msg.messageType === 'image' && msg.mediaUrl" class="media-container">
-                <img [src]="msg.mediaUrl" alt="Shared Image" class="chat-media-image" />
-              </div>
-
-              <!-- Text Message Content -->
-              <p class="message-text" *ngIf="msg.text">{{ msg.text }}</p>
-
-              <!-- Time Badge -->
-              <span class="message-time">
-                {{ msg.createdAt | date:'shortTime' }}
-              </span>
-            </div>
-          </div>
-        </ion-list>
-      </ion-content>
-
-      <ion-footer>
-        <ion-toolbar>
-          <ion-input
-            [(ngModel)]="newMessageText"
-            placeholder="Type a message..."
-            (keyup.enter)="onSend()"
-          ></ion-input>
-          <ion-buttons slot="end">
-            <ion-button (click)="onSend()">
-              <ion-icon name="send"></ion-icon>
-            </ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-footer>
-    </ng-template>
-  </ion-modal>
 </ion-content>

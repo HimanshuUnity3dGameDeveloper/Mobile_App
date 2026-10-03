@@ -41,7 +41,7 @@ export class ChatService {
   }
 
   // Emit chat message to NestJS server
-  sendMessage(payload: DirectMessage) {
+  sendMessage(payload: DirectMessage){
     if (this.socket) {
       this.socket.emit('sendPrivateMessage', payload);
     }
@@ -65,7 +65,7 @@ export class ChatService {
   getAllRooms(){
     return this.http.get<any>(`${environment.apiUrl}/direct-message/rooms`);
   }
-  
+
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();
