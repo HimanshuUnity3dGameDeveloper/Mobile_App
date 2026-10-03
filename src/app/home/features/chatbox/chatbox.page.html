@@ -13,6 +13,15 @@
 
 <ion-content [fullscreen]="true">
   <div class="container">
+    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+      <ion-refresher-content 
+        pullingIcon="chevron-down-circle-outline" 
+        pullingText="Pull down to refresh" 
+        refreshingSpinner="circles" 
+        refreshingText="Fetching profile...">
+      </ion-refresher-content>
+    </ion-refresher>
+    
     <section class="search-Bar-container">
       <ion-item lines="none" class="place-holder">
           <ion-icon slot="start" name="search-outline"></ion-icon>
@@ -58,7 +67,7 @@
             </ion-avatar>
             <ion-icon class="story-add-absolute" name="ellipse" color="success"></ion-icon>
           </div>
-          <div class="card-title-msg" [class.seen]="!isMessageRead(person)">
+          <div class="card-title-msg" [class.seen]="isMessageRead(person)" [class.unseen]="!isMessageRead(person)">
             <div class="person-name-time">
               <span>{{getSenderName(person.senderId)}}</span>
               <h6>{{(person.createdAt) | timeAgo}}</h6>

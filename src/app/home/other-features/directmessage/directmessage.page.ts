@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { NavController } from '@ionic/angular';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { IonContent, NavController } from '@ionic/angular';
 import { PreviousRouteServe } from 'src/app/core/previous-route-serve';
 import { AuthService } from 'src/app/core/authcontroller/auth-service';
 import { ContentAuthor, DirectMessage } from 'src/app/core/authcontroller/authInterface';
 import { slideRightToLeftAnimation } from 'src/app/animation/rightToleft.animation';
 import { ChatService } from 'src/app/home/features/chatbox/chat-service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-directmessage',
@@ -12,7 +13,9 @@ import { ChatService } from 'src/app/home/features/chatbox/chat-service';
   styleUrls: ['./directmessage.page.scss'],
   standalone: false
 })
-export class DirectmessagePage implements OnInit {
+export class DirectmessagePage implements OnInit, OnDestroy {
+  @ViewChild(IonContent, { static: false }) content!: IonContent;
+  private messageSub?: Subscription;
 
   roomId = '';
   messages: DirectMessage[] = [];
@@ -20,8 +23,8 @@ export class DirectmessagePage implements OnInit {
   
   activeUser: DirectMessage | null = null;
   activeUserName: any | null = null;
-
   profile: ContentAuthor | null = null;
+
   private prevUrl: string | null = null;
 
   constructor(
@@ -40,22 +43,57 @@ export class DirectmessagePage implements OnInit {
     if(!session.isAuthenticated)
     { 
       return;
-    }else{
-      const state = history.state;
-      if (state && state.roomId) {
-        this.roomId = state.roomId;
-        this.activeUser = state.targetUser;
-        this.profile = state.user;
-        this.activeUserName = state.targetName;
-      }
-      
-      this.prevUrl = this.previousRoute.getPreviousUrl();
-      if(this.prevUrl === null){
-        this.prevUrl = '/home/chat';
-      }
-      
-      
+    }
+    
+    // 1. Unpack navigation state
+    const state = history.state;
+    if (state && state.roomId) {
+      this.roomId = state.roomId;
+      this.activeUser = state.targetUser;
+      this.profile = state.user;
+      this.activeUserName = state.targetName;
+    }
+    
+    this.prevUrl = this.previousRoute.getPreviousUrl() || '/home/chat';
+        
+    if (this.roomId && this.profile?.userId) {
+      // 2. Ensure room socket connection is active
+      this.chatServe.joinRoom(this.roomId, this.profile.userId);
+
+      // 3. Mark unread messages as read
+      this.chatServe.markMessagesAsRead(this.roomId, this.profile.userId);
+
+      // 4. Fetch message history
       this.loadHistory(this.roomId);
+    }
+
+    // 5. Clean subscription before creating new one
+    this.unsubscribe();
+
+    // 6. Listen for live incoming messages for this room
+    this.messageSub = this.chatServe.getMessages().subscribe({
+      next: (message: DirectMessage) => {
+        if (message && message.roomId === this.roomId) {
+          this.messages.push(message);
+          this.scrollToBottom();
+        }
+      },
+      error: (err) => console.error('Error in direct message stream:', err)
+    });
+  }
+
+  ionViewWillLeave() {
+    this.unsubscribe();
+  }
+
+  ngOnDestroy() {
+    this.unsubscribe();
+  }
+
+  private unsubscribe() {
+    if (this.messageSub) {
+      this.messageSub.unsubscribe();
+      this.messageSub = undefined;
     }
   }
 
@@ -70,18 +108,18 @@ export class DirectmessagePage implements OnInit {
     }
 
     this.chatServe.sendMessage(payload);
-    this.loadHistory(this.roomId);
     this.newMessageText = '';
+    this.scrollToBottom();
   }
 
   loadHistory(roomId?: string) {
-    if (!this.roomId) return;
+    if (!roomId) return;
 
-    this.chatServe.getRoomHistory(this.roomId).subscribe({
+    this.chatServe.getRoomHistory(roomId).subscribe({
       next: (res: DirectMessage[]) => {
         // Filter out messages sent by the logged-in user
         this.messages = res;
-        console.log('Loaded chat history for room:', this.roomId, this.messages);
+        this.scrollToBottom();
       },
       error: (err) => console.error('Error fetching chat history:', err)
     });
@@ -99,6 +137,14 @@ export class DirectmessagePage implements OnInit {
         return senderId.authorName;
       }
     return 'User';
+  }
+
+  scrollToBottom() {
+    setTimeout(() => {
+      if (this.content) {
+        this.content.scrollToBottom(300);
+      }
+    }, 100);
   }
 
   goBack(){

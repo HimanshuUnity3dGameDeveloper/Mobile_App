@@ -7,14 +7,6 @@ import { AuthService } from 'src/app/core/authcontroller/auth-service';
 import { NavController } from '@ionic/angular';
 import { slideLeftToRightAnimation } from 'src/app/animation/leftToright.animation';
 
-interface FollowList{
-  _id: string;
-  username: string;
-  fullname: string;
-  imgUrl: string;
-  status: string;
-}
-
 @Component({
   selector: 'app-chatbox',
   templateUrl: './chatbox.page.html',
@@ -22,32 +14,22 @@ interface FollowList{
   standalone: false
 })
 
-export class ChatboxPage implements OnInit {
-  
+export class ChatboxPage implements OnInit, OnDestroy {
+  private messageSub?: Subscription;
+
   roomId = ''; 
   messages: DirectMessage[] = [];
-  newMessageText: string = '';
-  lastMessageText: string = '';
-  lastMessageTime: string | Date = '';
   
-  activeUser: DirectMessage | null = null;
   profile: ContentAuthor | null = null;
   user: User | null = null;
   avatarUrl?: string = '';
   selectedTag: string = 'Primary';
-  isSeen: boolean = false;
 
   tags: string[] = ['Primary', 'Requests', 'General'];
 
   follows: User[] = []
   followerList: any[] = [];
   followingList: any[] =[];
-
-  onlineFriend = [
-    {_id:'1', fullname:'Luna Art', imgUrl:'assets/images/luna_art.jpg', status:'false'},
-    {_id:'1', fullname:'Neo Pixel', imgUrl:'assets/images/neo_pixel.jpg', status:'false'},
-    {_id:'1', fullname:'Travel Joy', imgUrl:'assets/images/travel_joy.jpg', status:'false'},
-  ]
   
   constructor(
     private readonly authServe: AuthService,
@@ -56,48 +38,114 @@ export class ChatboxPage implements OnInit {
     private readonly navCtrl: NavController,
   ) { }
 
-  ngOnInit() { 
-    
-  }
+  ngOnInit() {}
 
   ionViewWillEnter(){
-
     const session = this.authServe.getSession();
     if(!session.isAuthenticated || !session.token){
       return
-    }else{
-      this.profileServe.loadUserData().subscribe({
-        next: (userData) => {
-          this.user = userData;
-          this.profile = {
-            ...this.profile,
-            userId: userData?._id ? String(userData._id).trim() : '',
-            authorName: userData?.fullname || '',
-            avatarUrl: userData?.avatarUrl || '',
-          };
-          this.avatarUrl = userData.avatarUrl?.trim();       
-        },
-        error: (err) => {
-          console.error('Failed to load user profile:', err);
-        },
-      });
-
-      this.updateFollowList();
-
-      this.chatServe.connectSocket(session?.token);
-      
-      this.chatServe.getAllRooms().subscribe({
-        next: (res)=>{
-          const ids = res.map((room:any)=> room._id);
-          if(ids.length > 0){
-            ids.forEach((id:any)=>{
-              this.roomId = id;
-              this.loadHistory([this.roomId]);
-            });
-          }
-        }
-      });
     }
+
+    this.chatServe.connectSocket(session?.token);
+    
+    // Clean old subscription if existing
+    this.unsubscribe();
+
+    this.messageSub = this.chatServe.getMessages().subscribe({
+      next: (message: DirectMessage) => {
+        if (message && message.roomId) {
+          this.updateRoomSummary(message);
+        }
+      },
+      error: (err) => console.error('Error in message stream:', err)
+    });
+
+    this.loadUserData();
+    this.updateFollowList();
+    
+  }
+
+  ionViewWillLeave() {
+    this.unsubscribe();
+  }
+
+  ngOnDestroy() {
+    this.unsubscribe();
+  }
+
+  private unsubscribe() {
+    if (this.messageSub) {
+      this.messageSub.unsubscribe();
+      this.messageSub = undefined;
+    }
+  }
+
+  // Update or insert room summary when a message arrives
+  private updateRoomSummary(newMessage: DirectMessage) {
+    const index = this.messages.findIndex((m) => m.roomId === newMessage.roomId);
+
+    if (index !== -1) {
+      // Room exists: update its preview text, timestamp, and move it to top
+      const updatedRoom = { ...this.messages[index], ...newMessage };
+      this.messages = [
+        updatedRoom,
+        ...this.messages.filter((_, i) => i !== index)
+      ];
+    } else {
+      // New room: prepend to array
+      this.messages = [newMessage, ...this.messages];
+    }
+  }
+
+  handleRefresh(event: any){
+    this.loadUserData(event);    
+    this.callAllRooms(event); 
+  }
+
+  // 1.Load User Profile...
+  loadUserData(event?: any){
+    this.profileServe.loadUserData().subscribe({
+      next: (userData) => {
+        this.user = userData;
+        this.profile = {
+          ...this.profile,
+          userId: userData?._id ? String(userData._id).trim() : '',
+          authorName: userData?.fullname || '',
+          avatarUrl: userData?.avatarUrl || '',
+        };
+        this.avatarUrl = userData.avatarUrl?.trim(); 
+        this.callAllRooms();
+        if (event) {
+          event.target.complete();
+        }     
+      },
+      error: (err) => {
+        console.error('Failed to load user profile:', err);
+        if (event) {
+          event.target.complete();
+        } 
+      },
+    });
+  }
+
+  // 2. Call All Rooms...
+  callAllRooms(event?: any){
+    this.chatServe.getAllRooms().subscribe({
+      next: (res)=>{
+        const ids = res.map((room:any)=> room._id);
+        if(ids.length > 0){
+          ids.forEach((id:any)=>{
+            const userIds = id.split('_');
+            const otherUserId = userIds.some((uid: string) => uid === this.user?._id);
+            if(!otherUserId) return;
+            this.loadHistory([id]);
+          });
+        }
+        if (event) {
+          event.target.complete();
+        }  
+      }
+    });
   }
 
   //#region Following/Follower Content....
@@ -107,7 +155,7 @@ export class ChatboxPage implements OnInit {
     const payLoad: Followers = {
       followerId: this.user?._id??'',
       followingId: otherUserID
-    }
+    };
 
     this.profileServe.createNewFollower(payLoad).subscribe({
       next:()=>{
@@ -172,10 +220,7 @@ export class ChatboxPage implements OnInit {
   openPrivateChat(targetUser: any){
     if(!this.user?._id || !targetUser) return;
 
-    const targetName = targetUser?.fullname;
-    // 1. Set up active target user & composite room ID
-    this.activeUser = targetUser;
-    if(this.roomId) this.roomId = ''; // Reset roomId before creating a new one]
+    // 1. Generate a unique room ID based on the two user IDs (sorted to ensure consistency)
     this.roomId = [this.user._id, targetUser._id].sort().join('_');
 
     // 2. Join socket room on backend
@@ -187,70 +232,64 @@ export class ChatboxPage implements OnInit {
       state:{
         user: this.profile,
         roomId: this.roomId,
-        targetUser: this.activeUser,
-        targetName: targetName
+        targetUser: targetUser,
+        targetName: targetUser?.fullname
       }
     });
   }
 
   openGroupChat(item: any){
-
-    this.roomId = item.roomId;
+    if(!item.roomId) return;
     const recName = item?.senderId?.authorName;
+    
+    this.chatServe.markMessagesAsRead(item.roomId, this.user?._id??'').subscribe();
     this.navCtrl.navigateForward('/home/directmessage', {
       animation: slideLeftToRightAnimation,
       state:{
         user: this.profile,
-        roomId: this.roomId,
-        targetUser: this.activeUser,
+        roomId: item.roomId,
+        targetUser: item,
         targetName: recName
       }
     });
   }
 
   loadHistory(roomId?: string[]) {
-    
-    roomId?.forEach(id=>{this.chatServe.getRoomHistory(id).subscribe({
-      next: (res: DirectMessage[]) => {
-        const list = Array.isArray(res) ? res : [];
-        
-        if(list.length === 0){
-          this.messages = [];
-          return;
-        }
+    if (!roomId || roomId.length === 0) return;
 
-        // 1. Get the most recent message in this specific room
-        const lastMsg = list[list.length - 1];
-        
-        // 2. Find the message sent by the other participant
-        const filteredMessages = list.find(item => {
-          const senderId = typeof item.senderId === 'object' ? item.senderId.userId : item.senderId;
-          return senderId !== this.profile?.userId;
-        });
-        
-        // 3. Construct the room summary item
-        const roomSummary = filteredMessages 
-          ? { ...filteredMessages, text: lastMsg.text, createdAt: lastMsg.createdAt }
-          : { ...lastMsg, text: lastMsg.text, createdAt: lastMsg.createdAt };
+    roomId?.forEach(id=>{
+      this.chatServe.getRoomHistory(id).subscribe({
+        next: (res: DirectMessage[]) => {
+          const list = Array.isArray(res) ? res : [];
+          if (list.length === 0) return;
 
-        // 4. Append to the existing messages array (Avoid duplicates)
-        const exists = this.messages.some(m => m.roomId === roomSummary.roomId);
-        if (!exists) {
-          this.messages = [...this.messages, roomSummary];
-        }
+          // 1. Get the most recent message in this specific room
+          const lastMsg = list[list.length - 1];
+          
+          // 2. Find the message sent by the other participant
+          const filteredMessages = list.find(item => {
+            const senderId = typeof item.senderId === 'object' ? item.senderId.userId : '';
+            return senderId !== this.user?._id;
+          });
+          
+          // 3. Construct the room summary item
+          const roomSummary = {...(filteredMessages || lastMsg), roomId: id, text: lastMsg?.text, createdAt: lastMsg?.createdAt};
 
-        console.log('Accumulated room summaries:', this.messages);
-      },
-      error: (err) => console.error('Error fetching chat history:', err)
-    });})
+          // 4. Append to the existing messages array (Avoid duplicates)
+          const exists = this.messages.some(m => m.roomId === roomSummary.roomId);
+          if (!exists) {
+            this.messages = [...this.messages, roomSummary];
+          }
+
+        },
+        error: (err) => console.error('Error fetching chat history:', err)
+      });
+    })
   }
 
   //#endregion
-  
-  selectTag(tag: string) {
-    this.selectedTag = tag;
-  }
 
+  //#region Getting details...
   isMessageRead(message: DirectMessage | any): boolean {
     if (!message || !message.readBy || !this.user?._id) return false;
     return message.readBy.some((id: any) => id === this.user?._id);
@@ -272,6 +311,12 @@ export class ChatboxPage implements OnInit {
       return senderId.avatarUrl || defaultAvatar;
     }
     return defaultAvatar;
+  }
+
+  //#endregion
+  
+  selectTag(tag: string) {
+    this.selectedTag = tag;
   }
 
   doRefresh(event: any) {

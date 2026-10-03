@@ -17,18 +17,24 @@ export class ChatService {
   ){}
 
   connectSocket(jwtToken: string): void {
-    if(!this.socket || !this.socket.connected){
-      // Point to your NestJS server address
-      this.socket = io(environment.apiUrl,{
-        auth:{
-          token: jwtToken,
-        },
-        transports:['websocket']
+    if (!this.socket) {
+      this.socket = io(environment.apiUrl, {
+        auth: { token: jwtToken },
+        autoConnect: true,
+        transports: ['websocket'],
       });
 
-      this.socket.on('receive_message', (message: DirectMessage) => {
+      // FIXED: Listens for 'newMessage' emitted by DirectMessageGateway
+      this.socket.on('newMessage', (message: DirectMessage) => {
         this.messageSubject.next(message);
       });
+
+      this.socket.on('connect_error', (err) => {
+        console.error('Socket connection error:', err.message);
+      });
+    } else if (!this.socket.connected) {
+      this.socket.auth = { token: jwtToken };
+      this.socket.connect();
     }
   }
 
@@ -59,7 +65,7 @@ export class ChatService {
   }
 
   markMessagesAsRead(roomId: string, userId: string): Observable<any> {
-    return this.http.patch(`${environment.apiUrl}/direct-message/room/${roomId}/read`, { userId });
+    return this.http.patch(`${environment.apiUrl}/direct-message/rooms/${roomId}/read`, { userId });
   }
   
   getAllRooms(){
