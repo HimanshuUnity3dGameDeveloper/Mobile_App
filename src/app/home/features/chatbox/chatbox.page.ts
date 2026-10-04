@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ProfileService } from 'src/app/home/features/profile/profile-service';
 import { ChatService } from 'src/app/home/features/chatbox/chat-service';
-import { ChatList, ContentAuthor, DirectMessage, Followers, User } from 'src/app/core/authcontroller/authInterface';
-import { forkJoin, Subscription } from 'rxjs';
+import { ContentAuthor, DirectMessage, Followers, User } from 'src/app/core/authcontroller/authInterface';
+import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/core/authcontroller/auth-service';
 import { NavController } from '@ionic/angular';
 import { slideLeftToRightAnimation } from 'src/app/animation/leftToright.animation';
@@ -17,9 +17,9 @@ import { slideLeftToRightAnimation } from 'src/app/animation/leftToright.animati
 export class ChatboxPage implements OnInit, OnDestroy {
   private messageSub?: Subscription;
 
-  roomId = ''; 
+  roomId = '';
   messages: DirectMessage[] = [];
-  
+
   profile: ContentAuthor | null = null;
   user: User | null = null;
   avatarUrl?: string = '';
@@ -30,24 +30,25 @@ export class ChatboxPage implements OnInit, OnDestroy {
   follows: User[] = []
   followerList: any[] = [];
   followingList: any[] =[];
-  
+
   constructor(
     private readonly authServe: AuthService,
     private readonly profileServe: ProfileService,
     private readonly chatServe: ChatService,
-    private readonly navCtrl: NavController,
+    private readonly navCtrl: NavController
   ) { }
 
   ngOnInit() {}
 
   ionViewWillEnter(){
+
     const session = this.authServe.getSession();
     if(!session.isAuthenticated || !session.token){
       return
     }
 
     this.chatServe.connectSocket(session?.token);
-    
+
     // Clean old subscription if existing
     this.unsubscribe();
 
@@ -62,7 +63,6 @@ export class ChatboxPage implements OnInit, OnDestroy {
 
     this.loadUserData();
     this.updateFollowList();
-    
   }
 
   ionViewWillLeave() {
@@ -80,29 +80,12 @@ export class ChatboxPage implements OnInit, OnDestroy {
     }
   }
 
-  // Update or insert room summary when a message arrives
-  private updateRoomSummary(newMessage: DirectMessage) {
-    const index = this.messages.findIndex((m) => m.roomId === newMessage.roomId);
-
-    if (index !== -1) {
-      // Room exists: update its preview text, timestamp, and move it to top
-      const updatedRoom = { ...this.messages[index], ...newMessage };
-      this.messages = [
-        updatedRoom,
-        ...this.messages.filter((_, i) => i !== index)
-      ];
-    } else {
-      // New room: prepend to array
-      this.messages = [newMessage, ...this.messages];
-    }
-  }
-
   handleRefresh(event: any){
-    this.loadUserData(event);    
-    this.callAllRooms(event); 
+    this.loadUserData(event);
+    this.callAllRooms(event);
   }
 
-  // 1.Load User Profile...
+  //#region Loading Actual Data..
   loadUserData(event?: any){
     this.profileServe.loadUserData().subscribe({
       next: (userData) => {
@@ -113,22 +96,21 @@ export class ChatboxPage implements OnInit, OnDestroy {
           authorName: userData?.fullname || '',
           avatarUrl: userData?.avatarUrl || '',
         };
-        this.avatarUrl = userData.avatarUrl?.trim(); 
+        this.avatarUrl = userData.avatarUrl?.trim();
         this.callAllRooms();
         if (event) {
           event.target.complete();
-        }     
+        }
       },
       error: (err) => {
         console.error('Failed to load user profile:', err);
         if (event) {
           event.target.complete();
-        } 
+        }
       },
     });
   }
 
-  // 2. Call All Rooms...
   callAllRooms(event?: any){
     this.chatServe.getAllRooms().subscribe({
       next: (res)=>{
@@ -143,10 +125,87 @@ export class ChatboxPage implements OnInit, OnDestroy {
         }
         if (event) {
           event.target.complete();
-        }  
+        }
       }
     });
   }
+
+  // Load Whole room history...
+  loadHistory(roomId?: string[]) {
+    if (!roomId || roomId.length === 0) return;
+
+    roomId?.forEach(id=>{
+      this.chatServe.getRoomHistory(id).subscribe({
+        next: (res: DirectMessage[]) => {
+          const list = Array.isArray(res) ? res : [];
+          if (list.length === 0) return;
+
+          // 1. Get the most recent message in this specific room
+          const lastMsg = list[list.length - 1];
+
+          // 2. Find the message sent by the other participant
+          const filteredMessages = list.find(item => {
+            const senderId = typeof item.senderId === 'object' ? item.senderId.userId : '';
+            return senderId !== this.user?._id;
+          });
+
+          // 3. Construct the room summary item
+          const roomSummary = {...(filteredMessages || lastMsg), roomId: id, text: lastMsg?.text, createdAt: lastMsg?.createdAt};
+
+          this.updateRoomSummary(roomSummary);
+        },
+        error: (err) => console.error('Error fetching chat history:', err)
+      });
+    })
+  }
+
+  // Update or insert room summary when a message arrives
+  private updateRoomSummary(newMessage: DirectMessage) {
+    const index = this.messages.findIndex((m) => m.roomId === newMessage.roomId);
+
+    if (index !== -1) {
+      // Room exists: merge updated fields
+      this.messages[index] = { ...this.messages[index], ...newMessage };
+    } else {
+      // New room: prepend to array
+      this.messages.push(newMessage);
+    }
+
+    // Always keep array sorted so the most recent timestamp is at top
+    this.messages = [...this.messages].sort((a, b) => {
+      const timeA = new Date(a.createdAt || 0).getTime();
+      const timeB = new Date(b.createdAt || 0).getTime();
+      return timeB - timeA; // Descending order (newest first)
+    });
+  }
+
+  //#endregion
+
+  //#region Getting details...
+  isMessageRead(message: DirectMessage | any): boolean {
+    if (!message || !message.readBy || !this.user?._id) return false;
+    return message.readBy.some((id: any) => id === this.user?._id);
+  }
+
+  getSenderName(senderId: ContentAuthor | string | null | undefined): string {
+    if(!senderId) return 'User';
+    if (typeof senderId === 'object' && senderId !== null && 'authorName' in senderId) {
+      return senderId.authorName || 'User';
+    }
+    return 'User';
+  }
+
+  getSenderAvatar(senderId: ContentAuthor | string | null | undefined): string {
+    const defaultAvatar = 'assets/images/default-avatar.png';
+    if(!senderId) return defaultAvatar;
+
+    if (typeof senderId === 'object' && senderId !== null && 'avatarUrl' in senderId) {
+      return senderId.avatarUrl || defaultAvatar;
+    }
+    return defaultAvatar;
+  }
+
+  //#endregion
 
   //#region Following/Follower Content....
   onClickFollow(item: any){
@@ -189,7 +248,7 @@ export class ChatboxPage implements OnInit, OnDestroy {
             // Step-4. Fetch the user that following my account..
             const request2 = new Set(follower.map(item => item.followerId));
             this.followerList = list.filter(item => request2.has(item._id));
-        
+
             // Step-5. Filter only those user who didn't in my following list..
             this.follows = list.filter(item=>item._id !== this.user?._id && !request1.has(item._id));
 
@@ -216,8 +275,8 @@ export class ChatboxPage implements OnInit, OnDestroy {
   }
   //#endregion
 
-  //#region Chat Model..
-  openPrivateChat(targetUser: any){
+  //#region Navigate the path / route...
+   openPrivateChat(targetUser: any){
     if(!this.user?._id || !targetUser) return;
 
     // 1. Generate a unique room ID based on the two user IDs (sorted to ensure consistency)
@@ -233,15 +292,14 @@ export class ChatboxPage implements OnInit, OnDestroy {
         user: this.profile,
         roomId: this.roomId,
         targetUser: targetUser,
-        targetName: targetUser?.fullname
+        targetName: targetUser?.fullname,
+        targetAvatar: targetUser?.avatarUrl
       }
     });
   }
 
   openGroupChat(item: any){
     if(!item.roomId) return;
-    const recName = item?.senderId?.authorName;
-    
     this.chatServe.markMessagesAsRead(item.roomId, this.user?._id??'').subscribe();
     this.navCtrl.navigateForward('/home/directmessage', {
       animation: slideLeftToRightAnimation,
@@ -249,68 +307,10 @@ export class ChatboxPage implements OnInit, OnDestroy {
         user: this.profile,
         roomId: item.roomId,
         targetUser: item,
-        targetName: recName
+        targetName: item?.senderId?.authorName,
+        targetAvatar: item?.senderId?.avatarUrl
       }
     });
-  }
-
-  loadHistory(roomId?: string[]) {
-    if (!roomId || roomId.length === 0) return;
-
-    roomId?.forEach(id=>{
-      this.chatServe.getRoomHistory(id).subscribe({
-        next: (res: DirectMessage[]) => {
-          const list = Array.isArray(res) ? res : [];
-          if (list.length === 0) return;
-
-          // 1. Get the most recent message in this specific room
-          const lastMsg = list[list.length - 1];
-          
-          // 2. Find the message sent by the other participant
-          const filteredMessages = list.find(item => {
-            const senderId = typeof item.senderId === 'object' ? item.senderId.userId : '';
-            return senderId !== this.user?._id;
-          });
-          
-          // 3. Construct the room summary item
-          const roomSummary = {...(filteredMessages || lastMsg), roomId: id, text: lastMsg?.text, createdAt: lastMsg?.createdAt};
-
-          // 4. Append to the existing messages array (Avoid duplicates)
-          const exists = this.messages.some(m => m.roomId === roomSummary.roomId);
-          if (!exists) {
-            this.messages = [...this.messages, roomSummary];
-          }
-
-        },
-        error: (err) => console.error('Error fetching chat history:', err)
-      });
-    })
-  }
-
-  //#endregion
-
-  //#region Getting details...
-  isMessageRead(message: DirectMessage | any): boolean {
-    if (!message || !message.readBy || !this.user?._id) return false;
-    return message.readBy.some((id: any) => id === this.user?._id);
-  }
-
-  getSenderName(senderId: ContentAuthor | string | null | undefined): string {
-    if(!senderId) return 'User';
-    if (typeof senderId === 'object' && senderId !== null && 'authorName' in senderId) {
-      return senderId.authorName || 'User';
-    }
-    return 'User';
-  }
-  
-  getSenderAvatar(senderId: ContentAuthor | string | null | undefined): string {
-    const defaultAvatar = 'assets/images/default-avatar.png';
-    if(!senderId) return defaultAvatar;
-
-    if (typeof senderId === 'object' && senderId !== null && 'avatarUrl' in senderId) {
-      return senderId.avatarUrl || defaultAvatar;
-    }
-    return defaultAvatar;
   }
 
   //#endregion

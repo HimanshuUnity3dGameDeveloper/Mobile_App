@@ -2,10 +2,11 @@ import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { IonContent, NavController } from '@ionic/angular';
 import { PreviousRouteServe } from 'src/app/core/previous-route-serve';
 import { AuthService } from 'src/app/core/authcontroller/auth-service';
-import { ContentAuthor, DirectMessage } from 'src/app/core/authcontroller/authInterface';
+import { ContentAuthor, DirectMessage, User } from 'src/app/core/authcontroller/authInterface';
 import { slideRightToLeftAnimation } from 'src/app/animation/rightToleft.animation';
 import { ChatService } from 'src/app/home/features/chatbox/chat-service';
 import { Subscription } from 'rxjs';
+import { ProfileService } from '../../features/profile/profile-service';
 
 @Component({
   selector: 'app-directmessage',
@@ -23,15 +24,24 @@ export class DirectmessagePage implements OnInit, OnDestroy {
   
   activeUser: DirectMessage | null = null;
   activeUserName: any | null = null;
+  activeUserProfilePic: string | null = null;
   profile: ContentAuthor | null = null;
 
   private prevUrl: string | null = null;
+
+  //Modal..
+  targetUser: User | null = null;
+  isUserModalOpen = false;
+  holdTimer: any;
+  selectedRoom: any;
+  holdDuration = 500; // Time in milliseconds (0.5s) to trigger hold
 
   constructor(
     private navCtrl: NavController,
     private readonly previousRoute: PreviousRouteServe,
     private readonly authServe: AuthService,
-    private readonly chatServe: ChatService
+    private readonly chatServe: ChatService,
+    private readonly profileServe: ProfileService
   ) {}
 
   ngOnInit() {
@@ -52,6 +62,7 @@ export class DirectmessagePage implements OnInit, OnDestroy {
       this.activeUser = state.targetUser;
       this.profile = state.user;
       this.activeUserName = state.targetName;
+      this.activeUserProfilePic = state.targetAvatar || null;
     }
     
     this.prevUrl = this.previousRoute.getPreviousUrl() || '/home/chat';
@@ -139,6 +150,25 @@ export class DirectmessagePage implements OnInit, OnDestroy {
     return 'User';
   }
 
+  openUserModel(item: any){
+    const room: string[] = item.roomId.split('_');
+    const targetId = room.find(ids => ids !== this.profile?.userId);
+    
+    if(!targetId) return;
+    this.profileServe.loadUserDataById(targetId).subscribe({
+      next: (data) =>{
+        this.targetUser = data;
+        console.log(this.targetUser)
+      }
+    })
+  }
+
+  endHold(){
+    if(this.holdTimer){
+      clearTimeout(this.holdTimer);
+      this.holdTimer =null;
+    }
+  }
   scrollToBottom() {
     setTimeout(() => {
       if (this.content) {
@@ -151,7 +181,7 @@ export class DirectmessagePage implements OnInit, OnDestroy {
     if(this.prevUrl){
       this.navCtrl.navigateBack(this.prevUrl, {
         animation: slideRightToLeftAnimation
-      });
+      })
     }
     this.activeUser = null;
   }

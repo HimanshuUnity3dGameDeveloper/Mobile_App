@@ -25,7 +25,7 @@
 }
 
 .message-bubble {
-  max-width: 75%;
+  max-width: 65%;
   padding: 10px 14px;
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -50,4 +50,29 @@
     text-align: right;
     margin-top: 4px;
   }
+}
+
+.user-details{
+  display: flex;
+  padding: 0 5px;
+  gap: 8px;
+
+  .U-name{
+    font-size: 15px;
+    padding: 0;
+  }
+}
+
+.sender-pic{
+  display: flex;
+  align-items: flex-end;
+}
+
+.msg-person{
+  width: 34px;
+  height: 34px;
+}
+
+.input-holder{
+  padding: 0 10px;
 }

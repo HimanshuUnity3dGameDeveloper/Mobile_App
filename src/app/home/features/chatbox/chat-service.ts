@@ -72,6 +72,10 @@ export class ChatService {
     return this.http.get<any>(`${environment.apiUrl}/direct-message/rooms`);
   }
 
+  deleteMsg(roomId: string): Observable<any>{
+    return this.http.delete<any>(`${environment.apiUrl}/direct-message/rooms/${roomId}`);
+  }
+  
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();
