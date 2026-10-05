@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { IonContent, NavController } from '@ionic/angular';
 import { PreviousRouteServe } from 'src/app/core/previous-route-serve';
 import { AuthService } from 'src/app/core/authcontroller/auth-service';
-import { ContentAuthor, DirectMessage, User } from 'src/app/core/authcontroller/authInterface';
+import { ContentAuthor, DirectMessage, DMAuthor, User } from 'src/app/core/authcontroller/authInterface';
 import { slideRightToLeftAnimation } from 'src/app/animation/rightToleft.animation';
 import { ChatService } from 'src/app/home/features/chatbox/chat-service';
 import { Subscription } from 'rxjs';
@@ -25,7 +25,7 @@ export class DirectmessagePage implements OnInit, OnDestroy {
   activeUser: DirectMessage | null = null;
   activeUserName: any | null = null;
   activeUserProfilePic: string | null = null;
-  profile: ContentAuthor | null = null;
+  profile: DMAuthor | null = null;
 
   private prevUrl: string | null = null;
 
@@ -143,13 +143,16 @@ export class DirectmessagePage implements OnInit, OnDestroy {
   }
 
   getSenderName(senderId: DirectMessage['senderId']): string {
-    if (typeof senderId === 'object' && senderId !== null && 'authorName' in senderId) 
+    if (typeof senderId === 'object' && senderId !== null && 'authorFullName' in senderId) 
       {
-        return senderId.authorName;
+        return senderId.authorFullName;
       }
     return 'User';
   }
 
+  openUserInfo(){
+    
+  }
   openUserModel(item: any){
     const room: string[] = item.roomId.split('_');
     const targetId = room.find(ids => ids !== this.profile?.userId);

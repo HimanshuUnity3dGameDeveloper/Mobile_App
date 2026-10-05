@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ProfileService } from 'src/app/home/features/profile/profile-service';
 import { ChatService } from 'src/app/home/features/chatbox/chat-service';
-import { ContentAuthor, DirectMessage, Followers, User } from 'src/app/core/authcontroller/authInterface';
+import { ContentAuthor, DirectMessage, DMAuthor, Followers, User } from 'src/app/core/authcontroller/authInterface';
 import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/core/authcontroller/auth-service';
 import { NavController } from '@ionic/angular';
@@ -20,7 +20,7 @@ export class ChatboxPage implements OnInit, OnDestroy {
   roomId = '';
   messages: DirectMessage[] = [];
 
-  profile: ContentAuthor | null = null;
+  profile: DMAuthor | null = null;
   user: User | null = null;
   avatarUrl?: string = '';
   selectedTag: string = 'Primary';
@@ -93,7 +93,8 @@ export class ChatboxPage implements OnInit, OnDestroy {
         this.profile = {
           ...this.profile,
           userId: userData?._id ? String(userData._id).trim() : '',
-          authorName: userData?.fullname || '',
+          authorFullName: userData?.fullname || '',
+          authorUserName: userData.username,
           avatarUrl: userData?.avatarUrl || '',
         };
         this.avatarUrl = userData.avatarUrl?.trim();
@@ -144,13 +145,19 @@ export class ChatboxPage implements OnInit, OnDestroy {
           const lastMsg = list[list.length - 1];
 
           // 2. Find the message sent by the other participant
-          const filteredMessages = list.find(item => {
+          const filteredMessages = list.filter(item => {
             const senderId = typeof item.senderId === 'object' ? item.senderId.userId : '';
             return senderId !== this.user?._id;
           });
 
-          // 3. Construct the room summary item
-          const roomSummary = {...(filteredMessages || lastMsg), roomId: id, text: lastMsg?.text, createdAt: lastMsg?.createdAt};
+          // 3. Ignore if no incoming msg from otheruser
+          if(filteredMessages.length === 0) return;
+          
+          // 4. Take Latest incoming message from other user.. 
+          const targetMsg = filteredMessages[filteredMessages.length - 1]
+
+          // 5. Construct the room summary item
+          const roomSummary: DirectMessage = {...targetMsg, roomId: id, text: lastMsg?.text, createdAt: lastMsg?.createdAt};
 
           this.updateRoomSummary(roomSummary);
         },
@@ -187,15 +194,15 @@ export class ChatboxPage implements OnInit, OnDestroy {
     return message.readBy.some((id: any) => id === this.user?._id);
   }
 
-  getSenderName(senderId: ContentAuthor | string | null | undefined): string {
+  getSenderName(senderId: DMAuthor | string | null | undefined): string {
     if(!senderId) return 'User';
-    if (typeof senderId === 'object' && senderId !== null && 'authorName' in senderId) {
-      return senderId.authorName || 'User';
+    if (typeof senderId === 'object' && senderId !== null && 'authorFullName' in senderId) {
+      return senderId.authorFullName || 'User';
     }
     return 'User';
   }
 
-  getSenderAvatar(senderId: ContentAuthor | string | null | undefined): string {
+  getSenderAvatar(senderId: DMAuthor | string | null | undefined): string {
     const defaultAvatar = 'assets/images/default-avatar.png';
     if(!senderId) return defaultAvatar;
 

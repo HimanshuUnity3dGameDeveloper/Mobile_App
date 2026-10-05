@@ -147,10 +147,17 @@ export interface MediaComposerState {
   aspectRatio:    '1:1' | '9:16' | '4:5';
 }
 
+export interface DMAuthor{
+  userId:         string;
+  authorFullName: string;
+  authorUserName: string;
+  avatarUrl:      string;  
+}
+
 export interface DirectMessage {
   _id?: string;
   roomId: string;
-  senderId: ContentAuthor | string;
+  senderId: DMAuthor | string;
   text: string;
   messageType?: 'text' | 'image' | 'file';
   mediaUrl?: string;

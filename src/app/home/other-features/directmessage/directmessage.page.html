@@ -1,13 +1,6 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <div class="user-details" 
-      (touchstart)="openUserModel(activeUser)"
-      (touchend)="endHold()"
-      (touchcancel)="endHold()"
-      (mousedown)="openUserModel(activeUser)"
-      (mouseup)="endHold()"
-      (mouseleave)="endHold()"
-    >
+    <div class="user-details" (click)="openUserInfo()">
       <ion-avatar class="msg-person">
         <ion-img [src]="activeUserProfilePic" alt="User Avatar"></ion-img>
       </ion-avatar>
@@ -57,10 +50,6 @@
       </div>
     </div>
   </ion-list>
-
-  <ion-modal [isOpen]="isUserModalOpen" (didDismiss)="isUserModalOpen = false">
-    
-  </ion-modal>
 </ion-content>
 <ion-footer>
   <ion-toolbar class="input-holder">
@@ -69,10 +58,27 @@
       placeholder="Type a message..."
       (keyup.enter)="onSend()"
     ></ion-input>
-    <ion-buttons slot="end">
-      <ion-button (click)="onSend()">
-        <ion-icon name="send"></ion-icon>
-      </ion-button>
-    </ion-buttons>
+    @if(!newMessageText){
+      <ion-buttons slot="end" class="otherButtons">
+        <ion-button>
+          <ion-icon name="mic-outline"></ion-icon>
+        </ion-button>
+        <ion-button>
+          <ion-icon name="image-outline"></ion-icon>
+        </ion-button>
+        <ion-button>
+          <ion-icon name="sad-outline"></ion-icon>
+        </ion-button>
+        <ion-button>
+          <ion-icon name="add-circle-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    }@else{
+      <ion-buttons slot="end">
+        <ion-button (click)="onSend()">
+          <ion-icon name="send"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    }
   </ion-toolbar>
 </ion-footer>
