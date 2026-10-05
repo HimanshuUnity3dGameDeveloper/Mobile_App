@@ -7,6 +7,7 @@ import { slideRightToLeftAnimation } from 'src/app/animation/rightToleft.animati
 import { ChatService } from 'src/app/home/features/chatbox/chat-service';
 import { Subscription } from 'rxjs';
 import { ProfileService } from '../../features/profile/profile-service';
+import { slideLeftToRightAnimation } from 'src/app/animation/leftToright.animation';
 
 @Component({
   selector: 'app-directmessage',
@@ -23,11 +24,10 @@ export class DirectmessagePage implements OnInit, OnDestroy {
   newMessageText: string = '';
   
   activeUser: DirectMessage | null = null;
-  activeUserName: any | null = null;
+  activeUserFName: any | null = null;
+  activeUserUName: any | null = null;
   activeUserProfilePic: string | null = null;
   profile: DMAuthor | null = null;
-
-  private prevUrl: string | null = null;
 
   //Modal..
   targetUser: User | null = null;
@@ -38,7 +38,6 @@ export class DirectmessagePage implements OnInit, OnDestroy {
 
   constructor(
     private navCtrl: NavController,
-    private readonly previousRoute: PreviousRouteServe,
     private readonly authServe: AuthService,
     private readonly chatServe: ChatService,
     private readonly profileServe: ProfileService
@@ -61,11 +60,10 @@ export class DirectmessagePage implements OnInit, OnDestroy {
       this.roomId = state.roomId;
       this.activeUser = state.targetUser;
       this.profile = state.user;
-      this.activeUserName = state.targetName;
+      this.activeUserFName = state.targetFName;
+      this.activeUserUName = state.targetUName;
       this.activeUserProfilePic = state.targetAvatar || null;
     }
-    
-    this.prevUrl = this.previousRoute.getPreviousUrl() || '/home/chat';
         
     if (this.roomId && this.profile?.userId) {
       // 2. Ensure room socket connection is active
@@ -151,27 +149,17 @@ export class DirectmessagePage implements OnInit, OnDestroy {
   }
 
   openUserInfo(){
-    
-  }
-  openUserModel(item: any){
-    const room: string[] = item.roomId.split('_');
-    const targetId = room.find(ids => ids !== this.profile?.userId);
-    
-    if(!targetId) return;
-    this.profileServe.loadUserDataById(targetId).subscribe({
-      next: (data) =>{
-        this.targetUser = data;
-        console.log(this.targetUser)
+    this.navCtrl.navigateForward('/home/directmessage/directmessageinfo',{
+      animation: slideRightToLeftAnimation,
+      state: {
+        msg: this.messages,
+        username: this.activeUserUName,
+        fullname: this.activeUserFName,
+        avatar: this.activeUserProfilePic
       }
     })
   }
-
-  endHold(){
-    if(this.holdTimer){
-      clearTimeout(this.holdTimer);
-      this.holdTimer =null;
-    }
-  }
+  
   scrollToBottom() {
     setTimeout(() => {
       if (this.content) {
@@ -181,11 +169,9 @@ export class DirectmessagePage implements OnInit, OnDestroy {
   }
 
   goBack(){
-    if(this.prevUrl){
-      this.navCtrl.navigateBack(this.prevUrl, {
-        animation: slideRightToLeftAnimation
-      })
-    }
+    this.navCtrl.navigateBack('/home/chat', {
+      animation: slideLeftToRightAnimation
+    })
     this.activeUser = null;
   }
 }

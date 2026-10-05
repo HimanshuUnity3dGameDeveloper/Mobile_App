@@ -6,6 +6,7 @@ import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/core/authcontroller/auth-service';
 import { NavController } from '@ionic/angular';
 import { slideLeftToRightAnimation } from 'src/app/animation/leftToright.animation';
+import { slideRightToLeftAnimation } from 'src/app/animation/rightToleft.animation';
 
 @Component({
   selector: 'app-chatbox',
@@ -294,12 +295,13 @@ export class ChatboxPage implements OnInit, OnDestroy {
 
     // 3. Navigate forward passing room context
     this.navCtrl.navigateForward('/home/directmessage', {
-      animation: slideLeftToRightAnimation,
+      animation: slideRightToLeftAnimation,
       state:{
         user: this.profile,
         roomId: this.roomId,
         targetUser: targetUser,
-        targetName: targetUser?.fullname,
+        targetFName: targetUser?.fullname,
+        targetUName: targetUser?.username,
         targetAvatar: targetUser?.avatarUrl
       }
     });
@@ -309,12 +311,13 @@ export class ChatboxPage implements OnInit, OnDestroy {
     if(!item.roomId) return;
     this.chatServe.markMessagesAsRead(item.roomId, this.user?._id??'').subscribe();
     this.navCtrl.navigateForward('/home/directmessage', {
-      animation: slideLeftToRightAnimation,
+      animation: slideRightToLeftAnimation,
       state:{
         user: this.profile,
         roomId: item.roomId,
         targetUser: item,
-        targetName: item?.senderId?.authorName,
+        targetFName: item?.senderId?.authorFullName,
+        targetUName: item?.senderId?.authorUserName,
         targetAvatar: item?.senderId?.avatarUrl
       }
     });

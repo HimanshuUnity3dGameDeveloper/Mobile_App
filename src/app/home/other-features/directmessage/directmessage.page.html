@@ -1,10 +1,13 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <div class="user-details" (click)="openUserInfo()">
-      <ion-avatar class="msg-person">
+    <div class="user-details">
+      <ion-avatar class="msg-person" >
         <ion-img [src]="activeUserProfilePic" alt="User Avatar"></ion-img>
       </ion-avatar>
-      <ion-title class="U-name">{{ activeUserName || 'Private Chat' }}</ion-title>
+      <div class="title" (click)="openUserInfo()">
+        <ion-title class="U-name">{{ activeUserFName || 'Private Chat' }}</ion-title>
+        <span>{{activeUserUName}}</span>
+      </div>
     </div>
     <ion-buttons slot="start">
       <ion-button (click)="goBack()">
