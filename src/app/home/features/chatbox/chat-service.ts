@@ -46,14 +46,16 @@ export class ChatService {
     }
   }
 
-  // Emit chat message to NestJS server
+  // Step 5. Emit(produce) chat message to NestJS server
   sendMessage(payload: DirectMessage){
     if (this.socket) {
+
+      //Step 6. Sending our message to socket server..
       this.socket.emit('sendPrivateMessage', payload);
     }
   }
 
-  // Listen for incoming messages from server
+  // Step 7. Listen for incoming messages from server
   getMessages(): Observable<DirectMessage> {
     return this.messageSubject.asObservable();
   }
@@ -76,6 +78,7 @@ export class ChatService {
     return this.http.delete<any>(`${environment.apiUrl}/direct-message/rooms/${roomId}`);
   }
   
+  // Step 8. if want to become offline..
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();

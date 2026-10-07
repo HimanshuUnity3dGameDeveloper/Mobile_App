@@ -106,16 +106,19 @@ export class DirectmessagePage implements OnInit, OnDestroy {
     }
   }
 
+  // Step 2. Function of sending the message..
   onSend(){
     if(!this.newMessageText.trim() || !this.roomId || !this.profile) return;
 
+    // Step 3. the main content where have roomid, senderID, etc...
     const payload: DirectMessage = {
       roomId: this.roomId,
-      senderId: this.profile,
+      senderId: this.profile,  //// we can add more as per requirement...{receiver Id, name and image..}
       text: this.newMessageText,
       messageType: 'text'
     }
 
+    // Step 4. Move to service..
     this.chatServe.sendMessage(payload);
     this.newMessageText = '';
     this.scrollToBottom();
