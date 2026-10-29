@@ -13,8 +13,14 @@
 <ion-content [fullscreen]="true">
   <div class="container">
     <div class="post-panel" [style.display]="activeTab === 'POST' ? 'flex' : 'none'">
-     <div class="upper-container">
-        <ion-img [src]="postUrl" class="post-image"></ion-img>
+     <div class="upper-container" *ngIf="postUrl">
+        <image-cropper
+          [imageURL]="postUrl"
+          [maintainAspectRatio]="false"
+          [resizeToWidth]="800"
+          format="jpeg"
+          (imageCropped)="onImageCropped($event)">
+        </image-cropper>
       </div>
       <div class="lower-conatiner">
         <div class="btn-header">
